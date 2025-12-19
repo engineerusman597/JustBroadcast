@@ -1,0 +1,395 @@
+@page "/"
+@using DevExpress.Blazor
+@using JustBroadcast.Models
+@using JustBroadcast.Services
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@attribute [Authorize]
+@inject IAuthService AuthService
+@inject IConfiguration Configuration
+@inject HttpClient HttpClient
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Just Broadcast Dashboard</h1>
+        <p>Monitor your playout operations</p>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container">
+            <DxLoadingPanel Visible="true" Text="Loading dashboard..." />
+        </div>
+    }
+    else if (dashboardData != null)
+    {
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon playout-icon">
+                    <i class="dx-icon-activefolder"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Playouts</div>
+                    <div class="stat-value">@dashboardData.PlayoutStats.Total</div>
+                    <div class="stat-detail">@dashboardData.PlayoutStats.Running running, @dashboardData.PlayoutStats.Offline offline</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon channel-icon">
+                    <i class="dx-icon-video"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Channels</div>
+                    <div class="stat-value">@dashboardData.ChannelStats.Total</div>
+                    <div class="stat-detail">@dashboardData.ChannelStats.Assigned channels assigned</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon user-icon">
+                    <i class="dx-icon-user"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Users</div>
+                    <div class="stat-value">@dashboardData.UserStats.Total</div>
+                    <div class="stat-detail">@dashboardData.UserStats.Online user online</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon media-icon">
+                    <i class="dx-icon-image"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Media Assets</div>
+                    <div class="stat-value">@dashboardData.MediaAssetStats.Total.ToString("N0")</div>
+                    <div class="stat-detail">+@dashboardData.MediaAssetStats.AddedThisWeek this week</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon alert-icon">
+                    <i class="dx-icon-warning"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Alerts</div>
+                    <div class="stat-value">@dashboardData.AlertStats.Total</div>
+                    <div class="stat-detail">@dashboardData.AlertStats.RequireAttention require attention</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Active Playouts -->
+            <div class="panel active-playouts-panel">
+                <div class="panel-header">
+                    <h2>Active Playouts</h2>
+                </div>
+                <DxGrid Data="@dashboardData.ActivePlayouts"
+                        CssClass="playouts-grid">
+                    <Columns>
+                        <DxGridDataColumn FieldName="PlayoutName" Caption="Playout Name" />
+                        <DxGridDataColumn FieldName="ChannelName" Caption="Channel Name" />
+                        <DxGridDataColumn FieldName="Status" Caption="Status">
+                            <CellDisplayTemplate>
+                                @{
+                                    var playout = (ActivePlayout)context.DataItem;
+                                    var statusClass = playout.Status.ToLower();
+                                }
+                                <span class="status-badge status-@statusClass">
+                                    @if (playout.Status == "online")
+                                    {
+                                        <i class="dx-icon-bulletlist"></i>
+                                    }
+                                    @playout.Status
+                                </span>
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                        <DxGridDataColumn FieldName="Playing" Caption="Playing">
+                            <CellDisplayTemplate>
+                                @{
+                                    var playout = (ActivePlayout)context.DataItem;
+                                    var playingClass = playout.Playing.ToLower();
+                                }
+                                <span class="playing-badge playing-@playingClass">
+                                    @if (playout.Playing == "playing" || playout.Playing == "scheduled")
+                                    {
+                                        <i class="dx-icon-runner"></i>
+                                    }
+                                    @playout.Playing
+                                </span>
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                        <DxGridDataColumn FieldName="Spare" Caption="Spare">
+                            <CellDisplayTemplate>
+                                @{
+                                    var playout = (ActivePlayout)context.DataItem;
+                                }
+                                @if (playout.Spare)
+                                {
+                                    <i class="dx-icon-check spare-check"></i>
+                                }
+                            </CellDisplayTemplate>
+                        </DxGridDataColumn>
+                    </Columns>
+                </DxGrid>
+            </div>
+
+            <!-- Error Feed -->
+            <div class="panel error-feed-panel">
+                <div class="panel-header">
+                    <h2>Error Feed</h2>
+                </div>
+                <div class="error-list">
+                    @foreach (var error in dashboardData.ErrorFeed)
+                    {
+                        <div class="error-item error-@error.Type">
+                            <i class="dx-icon-@(error.Type == "error" ? "remove" : "warning")"></i>
+                            <div class="error-content">
+                                <div class="error-message">@error.Message</div>
+                                <div class="error-time">@error.TimeAgo</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- System Resources -->
+            <div class="panel system-resources-panel">
+                <div class="panel-header">
+                    <h2>System Resources</h2>
+                </div>
+                <div class="resources-content">
+                    <div class="resource-stats">
+                        <div class="resource-item">
+                            <div class="resource-label">CPU</div>
+                            <DxProgressBar CssClass="resource-progress"
+                                           MinValue="0"
+                                           MaxValue="100"
+                                           Value="@dashboardData.SystemResources.CpuUsage"
+                                           ShowStaticValue="true"
+                                           StaticValueText="@($"{dashboardData.SystemResources.CpuUsage}%")" />
+                        </div>
+                        <div class="resource-item">
+                            <div class="resource-label">GPU</div>
+                            <DxProgressBar CssClass="resource-progress"
+                                           MinValue="0"
+                                           MaxValue="100"
+                                           Value="@dashboardData.SystemResources.GpuUsage"
+                                           ShowStaticValue="true"
+                                           StaticValueText="@($"{dashboardData.SystemResources.GpuUsage}%")" />
+                        </div>
+                        <div class="resource-item">
+                            <div class="resource-label">RAM</div>
+                            <DxProgressBar CssClass="resource-progress"
+                                           MinValue="0"
+                                           MaxValue="100"
+                                           Value="@dashboardData.SystemResources.RamUsage"
+                                           ShowStaticValue="true"
+                                           StaticValueText="@($"{dashboardData.SystemResources.RamUsage}%")" />
+                        </div>
+                    </div>
+                    <div class="cpu-chart">
+                        <div class="chart-label">CPU</div>
+                        <DxChart Data="@dashboardData.SystemResources.CpuHistory" Width="100%" Height="150px">
+                            <DxChartLineSeries ArgumentField="@((CpuDataPoint v) => v.Time)"
+                                               ValueField="@((CpuDataPoint v) => v.Value)"
+                                               Name="CPU Usage" />
+                            <DxChartLegend Visible="false" />
+                        </DxChart>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Frequency Chart -->
+            <div class="panel error-frequency-panel">
+                <div class="panel-header">
+                    <h2>Error Frequency (last 7 days)</h2>
+                </div>
+                <DxChart Data="@errorFrequencyData" Width="100%" Height="250px">
+                    <DxChartBarSeries ArgumentField="@((ErrorFrequencyItem v) => v.Day)"
+                                      ValueField="@((ErrorFrequencyItem v) => v.Count)"
+                                      Name="Errors" />
+                    <DxChartLegend Visible="false" />
+                </DxChart>
+                <div class="chart-footer">
+                    <div class="recommended-actions">
+                        <div class="recommended-label">RECOMMENDED ACTIONS</div>
+                        <div class="recommended-item">Ffmpeg update required</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts -->
+            <div class="panel alerts-panel">
+                <div class="panel-header">
+                    <h2>ALERTS</h2>
+                </div>
+                <div class="alerts-list">
+                    @foreach (var alert in dashboardData.Alerts)
+                    {
+                        <div class="alert-item alert-@alert.Type">
+                            <i class="dx-icon-@(GetAlertIcon(alert.Type))"></i>
+                            <div class="alert-content">
+                                <div class="alert-message">@alert.Message</div>
+                                <div class="alert-time">@alert.TimeAgo</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DashboardData? dashboardData;
+    private bool isLoading = true;
+    private List<ErrorFrequencyItem> errorFrequencyData = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        isLoading = true;
+
+        try
+        {
+            // Get API endpoint from configuration
+            var apiUrl = Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7000";
+            var dashboardEndpoint = Configuration["ApiSettings:DashboardEndpoint"] ?? "/api/dashboard";
+
+            // Try to fetch from API
+            var response = await HttpClient.GetAsync($"{apiUrl}{dashboardEndpoint}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                dashboardData = await response.Content.ReadFromJsonAsync<DashboardData>();
+            }
+            else
+            {
+                // Use mock data if API call fails
+                LoadMockData();
+            }
+        }
+        catch
+        {
+            // Use mock data if exception occurs
+            LoadMockData();
+        }
+
+        // Prepare error frequency data for chart
+        if (dashboardData != null)
+        {
+            errorFrequencyData = new List<ErrorFrequencyItem>
+            {
+                new() { Day = "Mon", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Mon", 0) },
+                new() { Day = "Tue", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Tue", 0) },
+                new() { Day = "Wed", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Wed", 0) },
+                new() { Day = "Thu", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Thu", 0) },
+                new() { Day = "Fri", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Fri", 0) },
+                new() { Day = "Sat", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Sat", 0) },
+                new() { Day = "Sun", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Sun", 0) }
+            };
+        }
+
+        isLoading = false;
+    }
+
+    private void LoadMockData()
+    {
+        dashboardData = new DashboardData
+            {
+                PlayoutStats = new PlayoutStats { Total = 4, Running = 2, Offline = 2 },
+                ChannelStats = new ChannelStats { Total = 3, Assigned = 3 },
+                UserStats = new UserStats { Total = 1, Online = 1 },
+                MediaAssetStats = new MediaAssetStats { Total = 1247, AddedThisWeek = 24 },
+                AlertStats = new AlertStats { Total = 3, RequireAttention = 2 },
+                ActivePlayouts = new List<ActivePlayout>
+            {
+                new() { PlayoutName = "Main Channel HD", ChannelName = "Channel 1", Status = "online", Playing = "playing", Spare = false },
+                new() { PlayoutName = "Sports Channel", ChannelName = "Channel 2", Status = "online", Playing = "playing", Spare = false },
+                new() { PlayoutName = "Entertainment", ChannelName = "Channel 3", Status = "online", Playing = "playing", Spare = false },
+                new() { PlayoutName = "News 24/7", ChannelName = "Channel 4", Status = "online", Playing = "scheduled", Spare = true },
+                new() { PlayoutName = "Music Channel", ChannelName = "Channel 5", Status = "online", Playing = "playing", Spare = false },
+                new() { PlayoutName = "Documentary", ChannelName = "Channel 6", Status = "offline", Playing = "error", Spare = true },
+                new() { PlayoutName = "Kids Channel", ChannelName = "Channel 7", Status = "online", Playing = "playing", Spare = false },
+                new() { PlayoutName = "Movies HD", ChannelName = "Channel 8", Status = "online", Playing = "scheduled", Spare = false }
+            },
+                SystemResources = new SystemResources
+                {
+                    CpuUsage = 58,
+                    GpuUsage = 45,
+                    RamUsage = 68,
+                    CpuHistory = GenerateCpuHistory()
+                },
+                ErrorFeed = new List<ErrorItem>
+            {
+                new() { Message = "Network timeout", TimeAgo = "0 min ago ago", Type = "error" },
+                new() { Message = "Audio format mismatch on Playout Entertainment", TimeAgo = "0 min ago ago", Type = "warning" },
+                new() { Message = "Buffer underrun", TimeAgo = "15 min ago", Type = "warning" },
+                new() { Message = "Video engine cash", TimeAgo = "1 h ago ago", Type = "error" },
+                new() { Message = "Stream connection lost", TimeAgo = "1.5 h ago", Type = "warning" },
+                new() { Message = "Network timeout", TimeAgo = "0 min ago ago", Type = "error" }
+            },
+                Alerts = new List<AlertItem>
+            {
+                new() { Message = "Output frames drop", TimeAgo = "3 ms ago ago", Type = "info" },
+                new() { Message = "Ad breaks missed", TimeAgo = "35 m ago ago", Type = "warning" },
+                new() { Message = "Audio channels mis", TimeAgo = "11 ago ago", Type = "warning" },
+                new() { Message = "FPS drops", TimeAgo = "15 ago ago", Type = "warning" }
+            },
+                ErrorFrequency = new Dictionary<string, int>
+            {
+                { "Mon", 75 },
+                { "Tue", 60 },
+                { "Wed", 85 },
+                { "Thu", 55 },
+                { "Fri", 45 },
+                { "Sat", 50 },
+                { "Sun", 95 }
+            }
+            };
+    }
+
+    private List<CpuDataPoint> GenerateCpuHistory()
+    {
+        var history = new List<CpuDataPoint>();
+        var random = new Random();
+        var now = DateTime.Now;
+
+        for (int i = 20; i >= 0; i--)
+        {
+            history.Add(new CpuDataPoint
+                {
+                    Time = now.AddMinutes(-i),
+                    Value = random.Next(40, 70)
+                });
+        }
+
+        return history;
+    }
+
+    private string GetAlertIcon(string type)
+    {
+        return type switch
+        {
+            "error" => "remove",
+            "warning" => "warning",
+            "info" => "info",
+            _ => "info"
+        };
+    }
+
+    public class ErrorFrequencyItem
+    {
+        public string Day { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+}

@@ -1,0 +1,113 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using JustBroadcast.Services
+
+<div class="nav-header">
+    <div class="logo">
+        <i class="dx-icon-broadcast"></i>
+        <h3>Just Broadcast</h3>
+    </div>
+    <p class="logo-subtitle">Control Center</p>
+</div>
+
+<nav class="nav-menu">
+    <div class="nav-section">
+        <div class="nav-item">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <i class="dx-icon-home"></i>
+                <span>Main</span>
+            </NavLink>
+        </div>
+    </div>
+
+    <AuthorizeView>
+        <Authorized>
+            @if (context.User.CanManagePlayouts())
+            {
+                <div class="nav-section">
+                    <div class="nav-section-title">Playout Control</div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="playouts">
+                            <i class="dx-icon-activefolder"></i>
+                            <span>All Playouts</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="playout/1">
+                            <i class="dx-icon-video"></i>
+                            <span>Playout 1</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="playout/2">
+                            <i class="dx-icon-video"></i>
+                            <span>Playout 2</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="playout/3">
+                            <i class="dx-icon-video"></i>
+                            <span>Playout 3</span>
+                        </NavLink>
+                    </div>
+                </div>
+            }
+
+            @if (context.User.CanManageSettings())
+            {
+                <div class="nav-section">
+                    <div class="nav-section-title">Administration</div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link" href="admin">
+                            <i class="dx-icon-preferences"></i>
+                            <span>Administration</span>
+                        </NavLink>
+                    </div>
+                </div>
+            }
+
+            <div class="nav-section">
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="scheduler">
+                        <i class="dx-icon-event"></i>
+                        <span>Scheduler</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="cg-editor">
+                        <i class="dx-icon-edit"></i>
+                        <span>CG Editor</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="cg-control">
+                        <i class="dx-icon-dragvertical"></i>
+                        <span>CG Control</span>
+                    </NavLink>
+                </div>
+                <div class="nav-item">
+                    <NavLink class="nav-link" href="multiview">
+                        <i class="dx-icon-columnfield"></i>
+                        <span>Multiview</span>
+                    </NavLink>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</nav>
+
+<div class="nav-footer">
+    <AuthorizeView>
+        <Authorized>
+            <div class="user-profile">
+                <div class="user-avatar">A</div>
+                <div class="user-details">
+                    <div class="user-name">@context.User.Identity?.Name</div>
+                    <div class="user-email">@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "admin@playout.com")</div>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+@code {
+}

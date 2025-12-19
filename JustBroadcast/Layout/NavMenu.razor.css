@@ -1,0 +1,148 @@
+.nav-header {
+    padding: 24px 20px;
+    border-bottom: 1px solid #1e2539;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+}
+
+.logo i {
+    font-size: 24px;
+    color: #4A90E2;
+}
+
+.logo h3 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.logo-subtitle {
+    margin: 0;
+    color: #6b7280;
+    font-size: 12px;
+    padding-left: 36px;
+}
+
+.nav-menu {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.nav-section {
+    margin-bottom: 8px;
+}
+
+.nav-section-title {
+    color: #6b7280;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 20px;
+    margin-top: 8px;
+}
+
+.nav-item {
+    padding: 0 12px;
+}
+
+.nav-item ::deep a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #8b92a7;
+    text-decoration: none;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.nav-item ::deep a i {
+    font-size: 18px;
+}
+
+.nav-item ::deep a:hover {
+    background: #1e2539;
+    color: #ffffff;
+}
+
+.nav-item ::deep a.active {
+    background: #4A90E2;
+    color: #ffffff;
+}
+
+.nav-item ::deep a.active i {
+    color: #ffffff;
+}
+
+.nav-footer {
+    padding: 16px;
+    border-top: 1px solid #1e2539;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.user-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-email {
+    color: #6b7280;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Scrollbar styling */
+.nav-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.nav-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+    background: #1e2539;
+    border-radius: 3px;
+}
+
+.nav-menu::-webkit-scrollbar-thumb:hover {
+    background: #2a3350;
+}

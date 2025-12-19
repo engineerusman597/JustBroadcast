@@ -1,0 +1,101 @@
+@page "/login"
+@using DevExpress.Blazor
+@using JustBroadcast.Models
+@using JustBroadcast.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="logo">
+                <i class="fas fa-broadcast-tower"></i>
+                <h1>Just Broadcast</h1>
+            </div>
+            <p class="subtitle">Control Center</p>
+        </div>
+
+        <div class="login-form">
+            <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <DxTextBox @bind-Text="@loginModel.Username"
+                                   CssClass="login-input"
+                                   NullText="Enter your username"
+                                   ShowValidationIcon="false" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Username)" />
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <DxTextBox @bind-Text="@loginModel.Password"
+                                   Password="true"
+                                   CssClass="login-input"
+                                   NullText="Enter your password"
+                                   ShowValidationIcon="false" />
+                    </div>
+                    <ValidationMessage For="@(() => loginModel.Password)" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>@errorMessage</span>
+                    </div>
+                }
+
+                <DxButton Text="@(isLoading ? "Logging in..." : "Login")"
+                          RenderStyle="ButtonRenderStyle.Primary"
+                          CssClass="login-button"
+                          SubmitFormOnClick="true"
+                          Enabled="@(!isLoading)" />
+            </EditForm>
+        </div>
+
+        <div class="login-footer">
+            <p>Please contact your administrator for access</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequest loginModel = new();
+    private string errorMessage = string.Empty;
+    private bool isLoading = false;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = string.Empty;
+        isLoading = true;
+
+        try
+        {
+            var result = await AuthService.LoginAsync(loginModel);
+
+            if (result != null)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                errorMessage = "Invalid username or password";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

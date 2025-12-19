@@ -1,0 +1,53 @@
+﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using JustBroadcast.Services
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+
+<AuthorizeView>
+    <Authorized>
+        <div class="page">
+            <div class="sidebar">
+                <NavMenu />
+            </div>
+
+            <main>
+                <div class="top-row">
+                    <div class="user-info">
+                        <AuthorizeView>
+                            <Authorized Context="userContext">
+                                <span class="username">
+                                    <i class="dx-icon-user"></i>
+                                    @userContext.User.Identity?.Name
+                                </span>
+                                <span class="user-role">
+                                    @userContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+                                </span>
+                            </Authorized>
+                        </AuthorizeView>
+                    </div>
+                    <DxButton Text="Logout"
+                              IconCssClass="dx-icon-export"
+                              RenderStyle="ButtonRenderStyle.Secondary"
+                              Click="@HandleLogout"
+                              CssClass="logout-button" />
+                </div>
+
+                <article class="content">
+                    @Body
+                </article>
+            </main>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        @Body
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+}

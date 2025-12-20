@@ -7,11 +7,11 @@ namespace JustBroadcast.Models
         public UserStats UserStats { get; set; } = new();
         public MediaAssetStats MediaAssetStats { get; set; } = new();
         public AlertStats AlertStats { get; set; } = new();
-        public List<ActivePlayout> ActivePlayouts { get; set; } = new();
+        public List<ActivePlayout> ActivePlayouts { get; set; } = [];
         public SystemResources SystemResources { get; set; } = new();
-        public List<ErrorItem> ErrorFeed { get; set; } = new();
-        public List<AlertItem> Alerts { get; set; } = new();
-        public Dictionary<string, int> ErrorFrequency { get; set; } = new();
+        public List<ErrorItem> ErrorFeed { get; set; } = [];
+        public List<AlertItem> Alerts { get; set; } = [];
+        public Dictionary<string, int> ErrorFrequency { get; set; } = [];
     }
 
     public class PlayoutStats

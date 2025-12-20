@@ -13,24 +13,38 @@
 
             <main>
                 <div class="top-row">
-                    <div class="user-info">
+                    <div class="top-row-right">
+                        <div class="notification-icon">
+                            <i class="fas fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
                         <AuthorizeView>
                             <Authorized Context="userContext">
-                                <span class="username">
-                                    <i class="dx-icon-user"></i>
-                                    @userContext.User.Identity?.Name
-                                </span>
-                                <span class="user-role">
-                                    @userContext.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
-                                </span>
+                                @if (userInfo != null)
+                                {
+                                    <div class="user-dropdown" @onclick="ToggleUserMenu">
+                                        <div class="user-avatar-small">
+                                            @GetUserInitials()
+                                        </div>
+                                        <div class="user-details-small">
+                                            <div class="user-name-small">@GetUserName()</div>
+                                            <div class="user-email-small">@GetUserRole()</div>
+                                        </div>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                    @if (showUserMenu)
+                                    {
+                                        <div class="user-menu-dropdown">
+                                            <div class="user-menu-item" @onclick="HandleLogout">
+                                                <i class="fas fa-sign-out-alt"></i>
+                                                <span>Logout</span>
+                                            </div>
+                                        </div>
+                                    }
+                                }
                             </Authorized>
                         </AuthorizeView>
                     </div>
-                    <DxButton Text="Logout"
-                              IconCssClass="dx-icon-export"
-                              RenderStyle="ButtonRenderStyle.Secondary"
-                              Click="@HandleLogout"
-                              CssClass="logout-button" />
                 </div>
 
                 <article class="content">
@@ -43,11 +57,3 @@
         @Body
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-    private async Task HandleLogout()
-    {
-        await AuthService.LogoutAsync();
-        NavigationManager.NavigateTo("/login", forceLoad: true);
-    }
-}

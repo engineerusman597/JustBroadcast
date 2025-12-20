@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="DevExpress.Blazor" Version="25.2.3" />
+    <PackageReference Include="DevExpress.Blazor.Themes" Version="25.2.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.1" PrivateAssets="all" />

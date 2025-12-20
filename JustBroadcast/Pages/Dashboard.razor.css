@@ -31,7 +31,7 @@
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -43,16 +43,18 @@
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-direction: row-reverse;
 }
 
 .stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 10px;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 28px;
+    flex-shrink: 0;
 }
 
 .playout-icon {
@@ -82,24 +84,28 @@
 
 .stat-content {
     flex: 1;
+    min-width: 0;
 }
 
 .stat-label {
     color: #8b92a7;
     font-size: 13px;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
+    font-weight: 500;
 }
 
 .stat-value {
     color: #ffffff;
-    font-size: 28px;
-    font-weight: 600;
+    font-size: 32px;
+    font-weight: 700;
     margin-bottom: 4px;
+    line-height: 1;
 }
 
 .stat-detail {
     color: #6b7280;
     font-size: 12px;
+    line-height: 1.4;
 }
 
 /* Content Grid */
@@ -112,16 +118,16 @@
 .panel {
     background: #252d47;
     border-radius: 12px;
-    padding: 20px;
+    padding: 24px;
 }
 
 .panel-header {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
 .panel-header h2 {
     color: #ffffff;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     margin: 0;
 }
@@ -135,136 +141,271 @@
 }
 
 .system-resources-panel {
-    grid-column: span 6;
+    grid-column: span 4;
 }
 
 .error-frequency-panel {
-    grid-column: span 6;
+    grid-column: span 4;
 }
 
 .alerts-panel {
-    grid-column: span 12;
+    grid-column: span 4;
 }
 
 /* Active Playouts Grid */
 ::deep .playouts-grid {
-    background: transparent;
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+}
+
+::deep .playouts-grid .dxbl-grid {
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+::deep .playouts-grid table {
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+}
+
+::deep .playouts-grid .dxbl-grid-header {
+    background: transparent !important;
+    border: none !important;
 }
 
 ::deep .playouts-grid .dxbl-grid-header-content {
-    background: #1e2539;
-    color: #8b92a7;
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: #8B92A7 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    padding: 14px 16px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    letter-spacing: 0.5px !important;
+}
+
+::deep .playouts-grid .dxbl-grid-header-cell {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+}
+
+::deep .playouts-grid .dxbl-grid-header {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
 ::deep .playouts-grid .dxbl-grid-data-row {
-    background: #252d47;
-    color: #ffffff;
-    border-bottom: 1px solid #1e2539;
+    background: transparent !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    height: 52px !important;
+}
+
+::deep .playouts-grid .dxbl-grid-data-row:last-child {
+    border-bottom: none !important;
 }
 
 ::deep .playouts-grid .dxbl-grid-data-row:hover {
-    background: #2a3350;
+    background: rgba(74, 144, 226, 0.05) !important;
+}
+
+::deep .playouts-grid .dxbl-grid-cell {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    border: none !important;
+    color: #ffffff !important;
+    vertical-align: middle !important;
+    text-align: left !important;
+}
+
+::deep .playouts-grid .dxbl-grid-cell-content {
+    color: #ffffff !important;
+    font-weight: 400 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+::deep .playouts-grid .dx-datagrid-rowsview .dx-row {
+    color: #ffffff !important;
+}
+
+::deep .playouts-grid .dx-datagrid-content .dx-datagrid-table .dx-row > td {
+    color: #ffffff !important;
+    vertical-align: middle !important;
+}
+
+/* Force white text color for all grid cells */
+::deep .playouts-grid tbody td,
+::deep .playouts-grid .dxbl-grid tbody td,
+::deep .playouts-grid .dx-data-row td {
+    color: #ffffff !important;
+}
+
+/* Ensure text is visible in all columns */
+::deep .playouts-grid .dxbl-grid-cell > *,
+::deep .playouts-grid .dxbl-grid-cell-content > * {
+    color: #ffffff !important;
+}
+
+/* DevExpress specific text color fixes */
+::deep .playouts-grid .dxbl-grid-data-cell,
+::deep .playouts-grid .dx-datagrid-text-content,
+::deep .playouts-grid .dx-texteditor-input,
+::deep .playouts-grid td {
+    color: #ffffff !important;
+}
+
+/* Fix for template columns showing white text */
+::deep .playouts-grid td:first-child,
+::deep .playouts-grid td:nth-child(2) {
+    color: #ffffff !important;
+    font-weight: 400 !important;
+}
+
+/* Hide grid footer and status messages */
+::deep .playouts-grid .dxbl-grid-footer,
+::deep .playouts-grid .dxbl-grid-status-bar,
+::deep .playouts-grid [role="status"],
+::deep .playouts-grid .dxbl-grid-empty-data-area,
+::deep .playouts-grid .dx-datagrid-nodata,
+::deep .playouts-grid .dxbs-aria-status-text,
+::deep .playouts-grid .sr-only {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
 }
 
 .status-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 6px;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 13px;
     font-weight: 500;
+    text-transform: lowercase;
+    min-width: 70px;
+    white-space: nowrap;
 }
 
 .status-online {
-    background: rgba(76, 209, 55, 0.15);
-    color: #4cd137;
+    background: #10b981;
+    color: #ffffff;
 }
 
 .status-offline {
-    background: rgba(155, 155, 155, 0.15);
-    color: #9b9b9b;
+    background: #64748b;
+    color: #ffffff;
 }
 
 .playing-badge {
     display: inline-flex;
     align-items: center;
+    justify-content: flex-start;
     gap: 6px;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 13px;
     font-weight: 500;
+    text-transform: lowercase;
+    min-width: 90px;
+    white-space: nowrap;
+}
+
+.playing-badge i {
+    font-size: 10px;
+    width: 12px;
 }
 
 .playing-playing {
-    background: rgba(76, 209, 55, 0.15);
-    color: #4cd137;
+    background: #10b981;
+    color: #ffffff;
 }
 
 .playing-scheduled {
-    background: rgba(99, 139, 250, 0.15);
-    color: #638bfa;
+    background: #3b82f6;
+    color: #ffffff;
 }
 
 .playing-error {
-    background: rgba(238, 82, 83, 0.15);
-    color: #ee5253;
+    background: #ef4444;
+    color: #ffffff;
 }
 
 .spare-check {
-    color: #4cd137;
-    font-size: 18px;
+    color: #10b981;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 /* Error Feed */
+.error-feed-panel .panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
 .error-list {
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .error-item {
+    padding: 12px 16px;
+    background: #1a2035;
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 8px;
 }
 
-.error-item i {
-    font-size: 20px;
+.error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
     margin-top: 2px;
 }
 
-.error-error {
-    background: rgba(238, 82, 83, 0.1);
+.error-error .error-icon {
+    color: #ef4444;
 }
 
-.error-error i {
-    color: #ee5253;
-}
-
-.error-warning {
-    background: rgba(255, 193, 7, 0.1);
-}
-
-.error-warning i {
-    color: #ffc107;
+.error-warning .error-icon {
+    color: #fbbf24;
 }
 
 .error-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     flex: 1;
 }
 
 .error-message {
     color: #ffffff;
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.4;
 }
 
 .error-time {
-    color: #6b7280;
-    font-size: 12px;
+    color: #6B7A99;
+    font-size: 11px;
 }
 
 /* System Resources */
@@ -276,25 +417,29 @@
 
 .resource-stats {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    flex-direction: row;
+    gap: 48px;
+    margin-bottom: 24px;
 }
 
 .resource-item {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .resource-label {
     color: #8b92a7;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    min-width: 40px;
+    text-transform: uppercase;
 }
 
-::deep .resource-progress {
-    flex: 1;
+.resource-value {
+    color: #ffffff;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .cpu-chart {
@@ -307,7 +452,60 @@
     margin-bottom: 8px;
 }
 
+/* Chart Styling */
+::deep .dxc-chart {
+    background: transparent !important;
+}
+
+::deep .dxc-chart svg {
+    background: transparent !important;
+}
+
+::deep .dxc-chart .dxc-val-axis text,
+::deep .dxc-chart .dxc-arg-axis text {
+    fill: #6B7A99 !important;
+    font-size: 11px !important;
+}
+
+::deep .dxc-chart .dxc-grid-line {
+    stroke: #1e2539 !important;
+    stroke-width: 1px !important;
+}
+
+::deep .dxc-chart .dxc-series path,
+::deep .dxc-chart .dxc-series line {
+    stroke: #3b82f6 !important;
+    stroke-width: 2px !important;
+    fill: none !important;
+}
+
+::deep .dxc-chart .dxc-series rect {
+    fill: #3b82f6 !important;
+}
+
+::deep .dxc-chart .dxc-axis-line {
+    stroke: #1e2539 !important;
+}
+
 /* Error Frequency Chart */
+.error-frequency-panel .dxc-chart {
+    height: auto !important;
+    min-height: 200px !important;
+}
+
+.chart-tooltip {
+    background: #1e2539;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.chart-tooltip strong {
+    color: #3b82f6;
+}
+
 .chart-footer {
     margin-top: 16px;
     padding-top: 16px;
@@ -333,50 +531,62 @@
 }
 
 /* Alerts */
+.alerts-panel .panel-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
 .alerts-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .alert-item {
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    padding: 12px;
-    border-radius: 8px;
-    background: #1e2539;
+    padding: 12px 16px;
+    background: #1a2035;
 }
 
-.alert-item i {
-    font-size: 18px;
-    margin-top: 2px;
+.alert-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    margin-top: 4px;
 }
 
-.alert-error i {
-    color: #ee5253;
+.alert-error .alert-icon {
+    color: #ef4444;
 }
 
-.alert-warning i {
-    color: #ffc107;
+.alert-warning .alert-icon {
+    color: #fbbf24;
 }
 
-.alert-info i {
-    color: #638bfa;
+.alert-info .alert-icon {
+    color: #3b82f6;
 }
 
 .alert-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .alert-message {
     color: #ffffff;
     font-size: 13px;
-    margin-bottom: 4px;
+    font-weight: 400;
+    line-height: 1.4;
 }
 
 .alert-time {
-    color: #6b7280;
+    color: #6B7A99;
     font-size: 11px;
 }
 

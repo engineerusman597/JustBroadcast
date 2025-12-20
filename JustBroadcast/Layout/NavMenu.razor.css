@@ -40,13 +40,38 @@
 }
 
 .nav-section-title {
-    color: #6b7280;
-    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #8b92a7;
+    font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 8px 20px;
+    padding: 10px 20px;
     margin-top: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-section-title:hover {
+    color: #ffffff;
+    background: #1e2539;
+}
+
+.nav-section-title i:first-child {
+    font-size: 16px;
+}
+
+.nav-section-title span {
+    flex: 1;
+}
+
+.nav-section-title .collapse-icon {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.nav-subsection {
+    padding-left: 8px;
 }
 
 .nav-item {
@@ -63,10 +88,35 @@
     text-decoration: none;
     transition: all 0.2s;
     font-size: 14px;
+    position: relative;
+}
+
+.nav-item ::deep a.nav-sublink {
+    padding-left: 20px;
+    font-size: 13px;
 }
 
 .nav-item ::deep a i {
-    font-size: 18px;
+    font-size: 16px;
+}
+
+.nav-item ::deep a span {
+    flex: 1;
+}
+
+.nav-item ::deep a .spare-icon {
+    font-size: 12px;
+    color: #ffc107;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .nav-item ::deep a:hover {
@@ -81,6 +131,11 @@
 
 .nav-item ::deep a.active i {
     color: #ffffff;
+}
+
+.phase2-section {
+    opacity: 0.6;
+    pointer-events: auto;
 }
 
 .nav-footer {

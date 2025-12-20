@@ -1,0 +1,92 @@
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4MzlmMjRmOC1iMjEzLTQwM2QtOGVmNS04YTViMjkzM2EyNmIiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjgzOWYyNGY4LWIyMTMtNDAzZC04ZWY1LThhNWIyOTMzYTI2YiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiJhZG1pbiIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IlN1cGVydmlzb3IiLCJqdGkiOiIwYmJhMTI5NmY0ZjQ0M2FmYjRhOWJmYzIxNGQ5NjFiMCIsIm5iZiI6MTc2NjIyOTMxOCwiZXhwIjoxNzY4ODIxMzE4LCJpc3MiOiJqdXN0YnJvYWRjYXN0IiwiYXVkIjoianVzdGJyb2FkY2FzdCJ9.vfheMvRwoaRXhROiPty4aGHM3Z7HH6SDaalkARgPI1I",
+  "refreshToken": "978e3819cf7a46c9bd1faed29f6acbf3",
+  "expiresAt": "2026-01-19T11:15:18.145819Z",
+  "user": {
+    "id": "839f24f8-b213-403d-8ef5-8a5b2933a26b",
+    "username": "admin",
+    "name": "Administrator",
+    "role": 0,
+    "allPlayouts": [
+      {
+        "id": "22fdc20d-1827-4843-8327-af3701d5435f",
+        "name": "I9 ULTIMATE",
+        "spare": false
+      },
+      {
+        "id": "8e7085f7-ee99-4edd-86cf-99a9243abdb5",
+        "name": "I9 PC 2",
+        "spare": false
+      },
+      {
+        "id": "aceab3c6-0687-40fd-8cfc-86b6cee4389e",
+        "name": "SPARE I9",
+        "spare": true
+      },
+      {
+        "id": "b2b72410-b204-436b-a0e7-71defea6537e",
+        "name": "I9 ULTIMATE 3",
+        "spare": false
+      },
+      {
+        "id": "b9b288c0-15fe-4ab4-8bab-fc33376582c6",
+        "name": "SPARE DRUGI PC",
+        "spare": false
+      },
+      {
+        "id": "ccb3b99e-5848-4d00-8443-ee62f857a2f3",
+        "name": "I9 ULTIMATE 4",
+        "spare": false
+      },
+      {
+        "id": "ee8b96d9-1c1b-429e-93a2-ff05dd83ec9a",
+        "name": "I9 ULTIMATE 2",
+        "spare": false
+      }
+    ],
+    "remotePlayouts": [
+      {
+        "id": "ee8b96d9-1c1b-429e-93a2-ff05dd83ec9a",
+        "name": "I9 ULTIMATE 2",
+        "channel": "",
+        "spare": false
+      },
+      {
+        "id": "b2b72410-b204-436b-a0e7-71defea6537e",
+        "name": "I9 ULTIMATE 3",
+        "channel": "",
+        "spare": false
+      },
+      {
+        "id": "ccb3b99e-5848-4d00-8443-ee62f857a2f3",
+        "name": "I9 ULTIMATE 4",
+        "channel": "",
+        "spare": false
+      },
+      {
+        "id": "22fdc20d-1827-4843-8327-af3701d5435f",
+        "name": "I9 ULTIMATE",
+        "channel": "",
+        "spare": false
+      }
+    ],
+    "schedulerChannels": [
+      {
+        "id": "0d062036-bfd7-4553-ac6b-55190949be6a",
+        "name": "JB3"
+      },
+      {
+        "id": "484567ad-71ce-4da0-9e9f-678482459439",
+        "name": "JB1"
+      },
+      {
+        "id": "bcb02592-6a2a-489d-a558-990bb2c520fb",
+        "name": "JB2"
+      },
+      {
+        "id": "6e0b3741-903f-46b1-b4bc-02a11f25b09f",
+        "name": "JB4"
+      }
+    ]
+  }
+}

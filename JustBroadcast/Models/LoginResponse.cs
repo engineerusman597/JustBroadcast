@@ -2,10 +2,9 @@ namespace JustBroadcast.Models
 {
     public class LoginResponse
     {
-        public string Token { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public UserRole Role { get; set; }
-        public DateTime Expiration { get; set; }
+        public string? Token { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime ExpiresAt { get; set; }
+        public UserInfoDto? User { get; set; }
     }
 }

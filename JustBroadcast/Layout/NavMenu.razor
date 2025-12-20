@@ -1,113 +1,182 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using JustBroadcast.Services
+@using JustBroadcast.Models
+@inject IAuthService AuthService
 
 <div class="nav-header">
     <div class="logo">
-        <i class="dx-icon-broadcast"></i>
+        <i class="fas fa-broadcast-tower"></i>
         <h3>Just Broadcast</h3>
     </div>
     <p class="logo-subtitle">Control Center</p>
 </div>
 
 <nav class="nav-menu">
-    <div class="nav-section">
-        <div class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <i class="dx-icon-home"></i>
-                <span>Main</span>
-            </NavLink>
-        </div>
-    </div>
+    @if (userInfo != null)
+    {
+        <!-- Main Menu with All Playouts submenu -->
+        <div class="nav-section">
+            <div class="nav-item">
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                    <i class="fas fa-home"></i>
+                    <span>Main</span>
+                </NavLink>
+            </div>
 
-    <AuthorizeView>
-        <Authorized>
-            @if (context.User.CanManagePlayouts())
+            <!-- All Playouts Submenu -->
+            @if (userInfo.AllPlayouts != null && userInfo.AllPlayouts.Any())
             {
-                <div class="nav-section">
-                    <div class="nav-section-title">Playout Control</div>
+                <div class="nav-subsection">
                     <div class="nav-item">
-                        <NavLink class="nav-link" href="playouts">
-                            <i class="dx-icon-activefolder"></i>
+                        <NavLink class="nav-link nav-sublink" href="all-playouts">
+                            <i class="fas fa-th-list"></i>
                             <span>All Playouts</span>
                         </NavLink>
                     </div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="playout/1">
-                            <i class="dx-icon-video"></i>
-                            <span>Playout 1</span>
-                        </NavLink>
-                    </div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="playout/2">
-                            <i class="dx-icon-video"></i>
-                            <span>Playout 2</span>
-                        </NavLink>
-                    </div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="playout/3">
-                            <i class="dx-icon-video"></i>
-                            <span>Playout 3</span>
-                        </NavLink>
-                    </div>
+                    @foreach (var playout in userInfo.AllPlayouts)
+                    {
+                        <div class="nav-item">
+                            <NavLink class="nav-link nav-sublink" href="@($"playout/{playout.Id}")">
+                                <i class="fas fa-desktop"></i>
+                                <span>@playout.Name</span>
+                                @if (playout.Spare == true)
+                                {
+                                    <i class="fas fa-trash" title="Spare"></i>
+                                }
+                            </NavLink>
+                        </div>
+                    }
                 </div>
             }
+        </div>
 
-            @if (context.User.CanManageSettings())
-            {
-                <div class="nav-section">
-                    <div class="nav-section-title">Administration</div>
-                    <div class="nav-item">
-                        <NavLink class="nav-link" href="admin">
-                            <i class="dx-icon-preferences"></i>
-                            <span>Administration</span>
-                        </NavLink>
-                    </div>
-                </div>
-            }
-
+        <!-- Administration Section (Supervisor & Administrator only) -->
+        @if (CanShowAdministration())
+        {
             <div class="nav-section">
-                <div class="nav-item">
-                    <NavLink class="nav-link" href="scheduler">
-                        <i class="dx-icon-event"></i>
-                        <span>Scheduler</span>
-                    </NavLink>
+                <div class="nav-section-title">
+                    <i class="fas fa-cog"></i>
+                    <span>Administration</span>
+                    <i class="fas fa-chevron-up collapse-icon"></i>
                 </div>
-                <div class="nav-item">
-                    <NavLink class="nav-link" href="cg-editor">
-                        <i class="dx-icon-edit"></i>
-                        <span>CG Editor</span>
-                    </NavLink>
-                </div>
-                <div class="nav-item">
-                    <NavLink class="nav-link" href="cg-control">
-                        <i class="dx-icon-dragvertical"></i>
-                        <span>CG Control</span>
-                    </NavLink>
-                </div>
-                <div class="nav-item">
-                    <NavLink class="nav-link" href="multiview">
-                        <i class="dx-icon-columnfield"></i>
-                        <span>Multiview</span>
-                    </NavLink>
+                <div class="nav-subsection">
+                    <div class="nav-item">
+                        <NavLink class="nav-link nav-sublink" href="admin/users">
+                            <i class="fas fa-users"></i>
+                            <span>Users</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link nav-sublink" href="admin/channels">
+                            <i class="fas fa-tv"></i>
+                            <span>Channels</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link nav-sublink" href="admin/playouts">
+                            <i class="fas fa-server"></i>
+                            <span>Playouts</span>
+                        </NavLink>
+                    </div>
+                    <div class="nav-item">
+                        <NavLink class="nav-link nav-sublink" href="admin/settings">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Settings</span>
+                        </NavLink>
+                    </div>
                 </div>
             </div>
-        </Authorized>
-    </AuthorizeView>
+        }
+
+        <!-- Playout Control Section (Dynamic from RemotePlayouts) -->
+        @if (CanShowPlayoutControl())
+        {
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    <i class="fas fa-play-circle"></i>
+                    <span>Playout Control</span>
+                    <i class="fas fa-chevron-up collapse-icon"></i>
+                </div>
+                <div class="nav-subsection">
+                    @foreach (var playout in userInfo.RemotePlayouts!)
+                    {
+                        var displayName = !string.IsNullOrEmpty(playout.Channel)
+                            ? $"{playout.Name} - {playout.Channel}"
+                            : playout.Name;
+
+                        <div class="nav-item">
+                            <NavLink class="nav-link nav-sublink" href="@($"playout-control/{playout.Id}")">
+                                <i class="fas fa-desktop"></i>
+                                <span>@displayName</span>
+                                @if (playout.Spare == true)
+                                {
+                                    <i class="fas fa-trash" title="Spare"></i>
+                                }
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Scheduler Section (Dynamic from SchedulerChannels) -->
+        @if (CanShowScheduler())
+        {
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Scheduler</span>
+                    <i class="fas fa-chevron-up collapse-icon"></i>
+                </div>
+                <div class="nav-subsection">
+                    @foreach (var channel in userInfo.SchedulerChannels!)
+                    {
+                        <div class="nav-item">
+                            <NavLink class="nav-link nav-sublink" href="@($"scheduler/{channel.Id}")">
+                                <i class="fas fa-tv"></i>
+                                <span>@channel.Name</span>
+                            </NavLink>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Phase 2 Menu Items (CG Editor, CG Control, Multiview) -->
+        <div class="nav-section phase2-section">
+            <div class="nav-item">
+                <NavLink class="nav-link" href="cg-editor">
+                    <i class="fas fa-font"></i>
+                    <span>CG Editor</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="cg-control">
+                    <i class="fas fa-layer-group"></i>
+                    <span>CG Control</span>
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="multiview">
+                    <i class="fas fa-th"></i>
+                    <span>Multiview</span>
+                </NavLink>
+            </div>
+        </div>
+    }
 </nav>
 
 <div class="nav-footer">
-    <AuthorizeView>
-        <Authorized>
-            <div class="user-profile">
-                <div class="user-avatar">A</div>
-                <div class="user-details">
-                    <div class="user-name">@context.User.Identity?.Name</div>
-                    <div class="user-email">@(context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "admin@playout.com")</div>
-                </div>
+    @if (userInfo != null)
+    {
+        <div class="user-profile">
+            <div class="user-avatar">@GetUserInitial()</div>
+            <div class="user-details">
+                <div class="user-name">@(userInfo.Username ?? userInfo.Name ?? "User")</div>
+                <div class="user-email">@GetRoleName()</div>
             </div>
-        </Authorized>
-    </AuthorizeView>
+        </div>
+    }
 </div>
 
-@code {
-}
+

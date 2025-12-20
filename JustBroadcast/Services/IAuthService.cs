@@ -5,8 +5,9 @@ namespace JustBroadcast.Services
     public interface IAuthService
     {
         Task<LoginResponse?> LoginAsync(LoginRequest request);
+        Task<LoginResponse?> RefreshTokenAsync();
         Task LogoutAsync();
-        Task<User?> GetCurrentUserAsync();
+        Task<UserInfoDto?> GetCurrentUserAsync();
         Task<bool> IsAuthenticatedAsync();
     }
 }

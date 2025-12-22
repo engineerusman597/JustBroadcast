@@ -4,10 +4,13 @@
 @using JustBroadcast.Services
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+@using Blazored.LocalStorage
 @attribute [Authorize]
 @inject IAuthService AuthService
 @inject IConfiguration Configuration
 @inject HttpClient HttpClient
+@inject ISignalRService SignalRService
+@inject ILocalStorageService LocalStorage
 
 <div class="dashboard-container">
     <div class="dashboard-header">
@@ -32,7 +35,7 @@
                 <div class="stat-content">
                     <div class="stat-label">Playouts</div>
                     <div class="stat-value">@dashboardData.PlayoutStats.Total</div>
-                    <div class="stat-detail">@dashboardData.PlayoutStats.Running running, @dashboardData.PlayoutStats.Offline offline</div>
+                    <div class="stat-detail">@GetPlayoutStatusText()</div>
                 </div>
             </div>
 
@@ -101,10 +104,11 @@
                             <CellDisplayTemplate>
                                 @{
                                     var playout = (ActivePlayout)context.DataItem;
-                                    var statusClass = playout.Status.ToLower();
+                                    var statusText = playout.IsOnline == 0 ? "OFFLINE" : playout.IsOnline == 1 ? "ON AIR" : "UNKNOWN";
+                                    var statusClass = playout.IsOnline == 0 ? "offline" : playout.IsOnline == 1 ? "onair" : "unknown";
                                 }
                                 <span class="status-badge status-@statusClass">
-                                    @playout.Status
+                                    @statusText
                                 </span>
                             </CellDisplayTemplate>
                         </DxGridDataColumn>
@@ -112,22 +116,12 @@
                             <CellDisplayTemplate>
                                 @{
                                     var playout = (ActivePlayout)context.DataItem;
-                                    var playingClass = playout.Playing.ToLower();
+                                    var playingText = playout.IsPlaying == 0 ? "Stopped" : "Playing";
+                                    var playingClass = playout.IsPlaying == 0 ? "stopped" : "playing";
                                 }
                                 <span class="playing-badge playing-@playingClass">
-                                    @if (playout.Playing == "playing")
-                                    {
-                                        <i class="fas fa-play"></i>
-                                    }
-                                    else if (playout.Playing == "scheduled")
-                                    {
-                                        <i class="fas fa-clock"></i>
-                                    }
-                                    else if (playout.Playing == "error")
-                                    {
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    }
-                                    @playout.Playing
+                                    <i class="fas fa-play"></i>
+                                    @playingText
                                 </span>
                             </CellDisplayTemplate>
                         </DxGridDataColumn>
@@ -146,29 +140,39 @@
                 </DxGrid>
             </div>
 
-            <!-- Error Feed -->
-            <div class="panel error-feed-panel">
+            <!-- Active Users -->
+            <div class="panel active-users-panel">
                 <div class="panel-header">
-                    <h2>Error Feed</h2>
+                    <h2>Active Users</h2>
+                    <i class="fas fa-cog settings-icon"></i>
                 </div>
-                <div class="error-list">
-                    @foreach (var error in dashboardData.ErrorFeed)
+                <div class="users-list">
+                    @foreach (var user in dashboardData.ActiveUsers)
                     {
-                        <div class="error-item error-@error.Type">
-                            <div class="error-icon">
-                                @if (error.Type == "error")
+                        <div class="user-item">
+                            <div class="user-avatar-container">
+                                @if (!string.IsNullOrEmpty(user.Avatar))
                                 {
-                                    <i class="fas fa-circle"></i>
+                                    <img src="@user.Avatar" alt="@user.Name" class="user-avatar-img" />
                                 }
-                                else if (error.Type == "warning")
+                                else
                                 {
-                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <div class="user-avatar-placeholder">
+                                        @GetUserInitials(user.Name)
+                                    </div>
                                 }
                             </div>
-                            <div class="error-content">
-                                <div class="error-message">@error.Message</div>
-                                <div class="error-time">@error.TimeAgo</div>
+                            <div class="user-info">
+                                <div class="user-name-section">
+                                    <span class="user-name-text">@user.Name</span>
+                                </div>
+                                <div class="user-role">@user.Role</div>
+                                <div class="user-last-seen">@user.LastSeen</div>
                             </div>
+                            @if (!string.IsNullOrEmpty(user.RoleBadge))
+                            {
+                                <div class="user-badge">@user.RoleBadge</div>
+                            }
                         </div>
                     }
                 </div>
@@ -244,22 +248,29 @@
                 </div>
             </div>
 
-            <!-- Alerts -->
-            <div class="panel alerts-panel">
-                <div class="panel-header">
-                    <h2>ALERTS</h2>
+            <!-- Errors (previously Alerts) -->
+            <div class="panel errors-panel">
+                <div class="panel-header-errors">
+                    <h2>Errors</h2>
                 </div>
-                <div class="alerts-list">
-                    @foreach (var alert in dashboardData.Alerts)
+                <div class="error-filters-container">
+                    <button class="filter-btn active">All</button>
+                    <button class="filter-btn">Critical</button>
+                    <button class="filter-btn">Warning</button>
+                    <button class="filter-btn">Acknowledge</button>
+                </div>
+                <div class="errors-list">
+                    @foreach (var error in dashboardData.ErrorFeed)
                     {
-                        <div class="alert-item alert-@alert.Type">
-                            <div class="alert-icon">
-                                <i class="fas fa-circle"></i>
+                        <div class="error-item-new error-@error.Type">
+                            <div class="error-icon-new"></div>
+                            <div class="error-content-new">
+                                <div class="error-message-new">@error.Message</div>
+                                <div class="error-meta-new">
+                                    <span class="error-date">17.12.2025 | live.m3u8 @@ 2:59:59</span>
+                                </div>
                             </div>
-                            <div class="alert-content">
-                                <div class="alert-message">@alert.Message</div>
-                                <div class="alert-time">@alert.TimeAgo</div>
-                            </div>
+                            <div class="error-badge">JB2</div>
                         </div>
                     }
                 </div>

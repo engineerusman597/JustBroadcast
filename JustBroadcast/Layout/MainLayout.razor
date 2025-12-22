@@ -20,27 +20,24 @@
                         </div>
                         <AuthorizeView>
                             <Authorized Context="userContext">
-                                @if (userInfo != null)
-                                {
-                                    <div class="user-dropdown" @onclick="ToggleUserMenu">
-                                        <div class="user-avatar-small">
-                                            @GetUserInitials()
-                                        </div>
-                                        <div class="user-details-small">
-                                            <div class="user-name-small">@GetUserName()</div>
-                                            <div class="user-email-small">@GetUserRole()</div>
-                                        </div>
-                                        <i class="fas fa-chevron-down"></i>
+                                <div class="user-dropdown" @onclick="ToggleUserMenu">
+                                    <div class="user-avatar-small">
+                                        @GetUserInitials()
                                     </div>
-                                    @if (showUserMenu)
-                                    {
-                                        <div class="user-menu-dropdown">
-                                            <div class="user-menu-item" @onclick="HandleLogout">
-                                                <i class="fas fa-sign-out-alt"></i>
-                                                <span>Logout</span>
-                                            </div>
+                                    <div class="user-details-small">
+                                        <div class="user-name-small">@GetUserName()</div>
+                                        <div class="user-email-small">@GetUserRole()</div>
+                                    </div>
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                                @if (showUserMenu)
+                                {
+                                    <div class="user-menu-dropdown">
+                                        <div class="user-menu-item" @onclick="HandleLogout">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                            <span>Logout</span>
                                         </div>
-                                    }
+                                    </div>
                                 }
                             </Authorized>
                         </AuthorizeView>

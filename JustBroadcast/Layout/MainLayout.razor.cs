@@ -7,16 +7,37 @@ namespace JustBroadcast.Layout
     {
         private bool showUserMenu = false;
         private UserInfoDto? userInfo;
+        private bool isLoading = true;
 
         protected override async Task OnInitializedAsync()
         {
             await LoadUserInfo();
         }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender && userInfo == null)
+            {
+                await LoadUserInfo();
+            }
+        }
+
         private async Task LoadUserInfo()
         {
-            userInfo = await AuthService.GetCurrentUserAsync();
-            StateHasChanged();
+            try
+            {
+                isLoading = true;
+                userInfo = await AuthService.GetCurrentUserAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading user info: {ex.Message}");
+            }
+            finally
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
         }
 
         private void ToggleUserMenu()

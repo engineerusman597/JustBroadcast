@@ -8,6 +8,7 @@ namespace JustBroadcast.Models
         public MediaAssetStats MediaAssetStats { get; set; } = new();
         public AlertStats AlertStats { get; set; } = new();
         public List<ActivePlayout> ActivePlayouts { get; set; } = [];
+        public List<ActiveUser> ActiveUsers { get; set; } = [];
         public SystemResources SystemResources { get; set; } = new();
         public List<ErrorItem> ErrorFeed { get; set; } = [];
         public List<AlertItem> Alerts { get; set; } = [];
@@ -47,11 +48,14 @@ namespace JustBroadcast.Models
 
     public class ActivePlayout
     {
+        public string Id { get; set; } = string.Empty;
         public string PlayoutName { get; set; } = string.Empty;
         public string ChannelName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string Playing { get; set; } = string.Empty;
         public bool Spare { get; set; }
+        public int IsOnline { get; set; } = 0; // 0=OFFLINE, 1=ON AIR, 2=UNKNOWN
+        public int IsPlaying { get; set; } = 0; // 0=Stopped, 1=Playing
     }
 
     public class SystemResources
@@ -80,5 +84,14 @@ namespace JustBroadcast.Models
         public string Message { get; set; } = string.Empty;
         public string TimeAgo { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty; // error, warning, info
+    }
+
+    public class ActiveUser
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Avatar { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string LastSeen { get; set; } = string.Empty;
+        public string RoleBadge { get; set; } = string.Empty; // JB1, JB2, etc.
     }
 }

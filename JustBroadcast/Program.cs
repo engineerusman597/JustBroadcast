@@ -31,6 +31,9 @@ namespace JustBroadcast
             builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
             builder.Services.AddScoped<IAuthService, AuthService>();
 
+            // Add SignalR
+            builder.Services.AddSingleton<ISignalRService, SignalRService>();
+
             await builder.Build().RunAsync();
         }
     }

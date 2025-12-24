@@ -80,8 +80,16 @@ namespace JustBroadcast.Layout
 
         private string GetUserRole()
         {
-            if (userInfo?.Role == null) return "User";
-            return userInfo.Role switch
+            Console.WriteLine($"GetUserRole - userInfo: {userInfo != null}");
+            Console.WriteLine($"GetUserRole - Role: {userInfo?.Role}");
+
+            if (userInfo?.Role == null)
+            {
+                Console.WriteLine("GetUserRole - Role is null, returning 'User'");
+                return "User";
+            }
+
+            var role = userInfo.Role switch
             {
                 (int)UserRole.Supervisor => "Supervisor",
                 (int)UserRole.Administrator => "Administrator",
@@ -89,6 +97,9 @@ namespace JustBroadcast.Layout
                 (int)UserRole.Viewer => "Viewer",
                 _ => "User"
             };
+
+            Console.WriteLine($"GetUserRole - Returning: {role}");
+            return role;
         }
     }
 }

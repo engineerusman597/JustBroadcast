@@ -46,7 +46,7 @@
                 <div class="stat-content">
                     <div class="stat-label">Channels</div>
                     <div class="stat-value">@dashboardData.ChannelStats.Total</div>
-                    <div class="stat-detail">@dashboardData.ChannelStats.Assigned channels assigned</div>
+                    <div class="stat-detail">@GetChannelStatusText()</div>
                 </div>
             </div>
 
@@ -68,7 +68,7 @@
                 <div class="stat-content">
                     <div class="stat-label">Media Assets</div>
                     <div class="stat-value">@dashboardData.MediaAssetStats.Total.ToString("N0")</div>
-                    <div class="stat-detail">+@dashboardData.MediaAssetStats.AddedThisWeek this week</div>
+                    <div class="stat-detail">@GetMediaAssetChangeText()</div>
                 </div>
             </div>
 
@@ -79,7 +79,7 @@
                 <div class="stat-content">
                     <div class="stat-label">Alerts</div>
                     <div class="stat-value">@dashboardData.AlertStats.Total</div>
-                    <div class="stat-detail">@dashboardData.AlertStats.RequireAttention require attention</div>
+                    <div class="stat-detail">@GetAlertStatusText()</div>
                 </div>
             </div>
         </div>
@@ -182,6 +182,12 @@
             <div class="panel system-resources-panel">
                 <div class="panel-header">
                     <h2>System Resources</h2>
+                    <div class="telemetry-toggle">
+                        <button class="telemetry-btn @(telemetryEnabled ? "telemetry-on" : "telemetry-off")"
+                                @onclick="ToggleTelemetry">
+                            Telemetry @(telemetryEnabled ? "ON" : "OFF")
+                        </button>
+                    </div>
                 </div>
                 <div class="resources-content">
                     <div class="resource-stats">
@@ -199,22 +205,34 @@
                         </div>
                     </div>
                     <div class="cpu-chart">
-                        <div class="chart-label">CPU</div>
-                        <DxChart Data="@dashboardData.SystemResources.CpuHistory" Width="100%" Height="200px">
-                            <DxChartLineSeries ArgumentField="@((CpuDataPoint v) => v.Time)"
-                                               ValueField="@((CpuDataPoint v) => v.Value)"
-                                               Name="CPU Usage">
-                                <DxChartSeriesPoint HoverMode="ChartSeriesPointHoverMode.Point" />
-                            </DxChartLineSeries>
+                        <DxChart Data="@dashboardData.SystemResources.CpuHistory"
+                                 Width="100%"
+                                 Height="200px"
+                                 LabelOverlap="ChartLabelOverlap.Hide">
+                            <DxChartAreaSeries Name="CPU Usage"
+                                               T="CpuDataPoint"
+                                               TArgument="DateTime"
+                                               TValue="int"
+                                               ArgumentField="@(point => point.Time)"
+                                               ValueField="@(point => point.Value)"
+                                               HoverMode="ChartContinuousSeriesHoverMode.None">
+                                <DxChartSeriesPoint Visible="false"
+                                                    HoverMode="ChartSeriesPointHoverMode.None" />
+                            </DxChartAreaSeries>
                             <DxChartArgumentAxis>
                                 <DxChartAxisLabel Format="ChartElementFormat.ShortTime" />
                             </DxChartArgumentAxis>
+                            <DxChartValueAxis>
+                                <DxChartAxisTitle Text="CPU %" />
+                            </DxChartValueAxis>
                             <DxChartLegend Visible="false" />
                             <DxChartTooltip Enabled="true" Position="RelativePosition.Outside">
-                                <div class="chart-tooltip">
-                                    <div>@context.Point.Argument</div>
-                                    <div><strong>@context.Point.Value%</strong></div>
-                                </div>
+                                @context.Point.Render((seriesPoint) =>
+                                    @<div class="chart-tooltip">
+                                        <div>@($"{seriesPoint.Argument:HH:mm:ss}")</div>
+                                        <div><strong>@($"{seriesPoint.Value}%")</strong></div>
+                                    </div>
+                                )
                             </DxChartTooltip>
                         </DxChart>
                     </div>
@@ -260,17 +278,17 @@
                     <button class="filter-btn">Acknowledge</button>
                 </div>
                 <div class="errors-list">
-                    @foreach (var error in dashboardData.ErrorFeed)
+                    @foreach (var error in dashboardData.Alerts)
                     {
                         <div class="error-item-new error-@error.Type">
                             <div class="error-icon-new"></div>
                             <div class="error-content-new">
                                 <div class="error-message-new">@error.Message</div>
                                 <div class="error-meta-new">
-                                    <span class="error-date">17.12.2025 | live.m3u8 @@ 2:59:59</span>
+                                    <span class="error-date">@error.TimeAgo</span>
                                 </div>
                             </div>
-                            <div class="error-badge">JB2</div>
+                            <div class="error-badge">@error.PlayoutName</div>
                         </div>
                     }
                 </div>

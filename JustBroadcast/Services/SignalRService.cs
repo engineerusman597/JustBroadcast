@@ -5,21 +5,15 @@ using System.Text.Json;
 
 namespace JustBroadcast.Services
 {
-    public class SignalRService : ISignalRService
+    public class SignalRService(IConfiguration configuration) : ISignalRService
     {
         private HubConnection? _connection;
-        private readonly IConfiguration _configuration;
         private string _clientId = Guid.NewGuid().ToString();
 
         public event Action<CommandDto>? CommandReceived;
         public event Action<string>? ConnectionStateChanged;
 
         public bool IsConnected => _connection?.State == HubConnectionState.Connected;
-
-        public SignalRService(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
 
         public async Task StartAsync(string accessToken)
         {
@@ -28,17 +22,29 @@ namespace JustBroadcast.Services
                 await StopAsync();
             }
 
-            var hubUrl = _configuration["ApiSettings:SignalRHub"];
+            var hubUrl = configuration["ApiSettings:SignalRHub"];
             if (string.IsNullOrEmpty(hubUrl))
             {
-                Console.WriteLine("SignalR hub URL not configured");
+                Console.WriteLine("[SignalRService] SignalR hub URL not configured");
                 return;
             }
 
+            Console.WriteLine($"[SignalRService] Configuring SignalR connection with JWT");
+            Console.WriteLine($"[SignalRService] Hub URL: {hubUrl}");
+            Console.WriteLine($"[SignalRService] Access Token Length: {accessToken?.Length ?? 0}");
+            Console.WriteLine($"[SignalRService] Access Token Preview: {(accessToken?.Length > 20 ? accessToken.Substring(0, 20) + "..." : accessToken)}");
+
+            // Add token as query parameter for SignalR authentication
+            var hubUrlWithToken = $"{hubUrl}?access_token={accessToken}";
+            Console.WriteLine($"[SignalRService] Hub URL with token: {hubUrl}?access_token=***");
+
             _connection = new HubConnectionBuilder()
-                .WithUrl(hubUrl, options =>
+                .WithUrl(hubUrlWithToken, options =>
                 {
+                    // Set the access token for authentication
                     options.AccessTokenProvider = () => Task.FromResult(accessToken)!;
+
+                    Console.WriteLine($"[SignalRService] JWT configured in AccessTokenProvider and query string");
                 })
                 .WithAutomaticReconnect()
                 .Build();
@@ -65,34 +71,53 @@ namespace JustBroadcast.Services
             };
 
             // Listen for commands
-            _connection.On<object>("ReceiveCommand", (data) =>
+            _connection.On<object>("Command", (data) =>
             {
                 try
                 {
+                    Console.WriteLine($"[SignalRService] ReceiveCommand triggered");
+                    Console.WriteLine($"[SignalRService] Raw data type: {data?.GetType().Name ?? "null"}");
+
                     var json = JsonSerializer.Serialize(data);
+                    Console.WriteLine($"[SignalRService] Serialized command JSON: {json}");
+
                     var command = JsonSerializer.Deserialize<CommandDto>(json);
                     if (command != null)
                     {
+                        Console.WriteLine($"[SignalRService] Successfully deserialized CommandDto");
+                        Console.WriteLine($"[SignalRService] Command type: {command.command}");
+                        Console.WriteLine($"[SignalRService] ClientId: {command.clientId}");
+                        Console.WriteLine($"[SignalRService] Invoking CommandReceived event");
                         CommandReceived?.Invoke(command);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[SignalRService] ERROR: Deserialized command is null");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing command: {ex.Message}");
+                    Console.WriteLine($"[SignalRService] ERROR processing command");
+                    Console.WriteLine($"[SignalRService] Exception: {ex.Message}");
+                    Console.WriteLine($"[SignalRService] Stack trace: {ex.StackTrace}");
                 }
             });
 
             try
             {
+                Console.WriteLine($"[SignalRService] Attempting to start connection to: {hubUrl}");
                 await _connection.StartAsync();
                 ConnectionStateChanged?.Invoke("Connected");
-                Console.WriteLine("SignalR connected successfully");
+                Console.WriteLine($"[SignalRService] ✓ SignalR connected successfully");
+                Console.WriteLine($"[SignalRService] Connection State: {_connection.State}");
 
                 await RegisterClient();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error connecting to SignalR: {ex.Message}");
+                Console.WriteLine($"[SignalRService] ✗ Error connecting to SignalR: {ex.Message}");
+                Console.WriteLine($"[SignalRService] Exception type: {ex.GetType().Name}");
+                Console.WriteLine($"[SignalRService] Stack trace: {ex.StackTrace}");
                 ConnectionStateChanged?.Invoke("Closed");
             }
         }
@@ -103,13 +128,19 @@ namespace JustBroadcast.Services
             {
                 try
                 {
+                    Console.WriteLine($"[SignalRService] Registering client: {_clientId} as WebDashboard");
                     await _connection.InvokeAsync("RegisterClient", _clientId, "WebDashboard");
-                    Console.WriteLine($"Registered SignalR client: {_clientId}");
+                    Console.WriteLine($"[SignalRService] ✓ Client registered successfully: {_clientId}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error registering client: {ex.Message}");
+                    Console.WriteLine($"[SignalRService] ✗ Error registering client: {ex.Message}");
+                    Console.WriteLine($"[SignalRService] Stack trace: {ex.StackTrace}");
                 }
+            }
+            else
+            {
+                Console.WriteLine($"[SignalRService] Cannot register client - connection state: {_connection?.State}");
             }
         }
 
@@ -117,22 +148,44 @@ namespace JustBroadcast.Services
         {
             if (_connection?.State != HubConnectionState.Connected)
             {
-                Console.WriteLine("SignalR not connected, cannot send status sync request");
+                Console.WriteLine("[SignalRService] SignalR not connected, cannot send status sync request");
                 return;
             }
 
             try
             {
-                await _connection.InvokeAsync("SendToAllExcept", clientId, new CommandDto
+                await _connection.InvokeAsync("SendToAll", new CommandDto
                 {
                     command = ServiceMessages.RequestStatusSync.ToString(),
                     clientId = clientId
                 });
-                Console.WriteLine("Status sync request sent");
+                Console.WriteLine("[SignalRService] Status sync request sent to all clients");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error sending status sync: {ex.Message}");
+                Console.WriteLine($"[SignalRService] Error sending status sync: {ex.Message}");
+            }
+        }
+
+        public async Task SendCommand(CommandDto command)
+        {
+            if (_connection?.State != HubConnectionState.Connected)
+            {
+                Console.WriteLine("[SignalRService] SignalR not connected, cannot send command");
+                return;
+            }
+
+            try
+            {
+                Console.WriteLine($"[SignalRService] Sending command via SendToAll: {command.command}");
+                await _connection.InvokeAsync("SendToAll", command);
+                Console.WriteLine($"[SignalRService] ✓ Command sent successfully: {command.command}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SignalRService] ✗ Error sending command: {ex.Message}");
+                Console.WriteLine($"[SignalRService] Stack trace: {ex.StackTrace}");
+                throw;
             }
         }
 

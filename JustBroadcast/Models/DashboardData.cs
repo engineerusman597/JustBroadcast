@@ -84,6 +84,7 @@ namespace JustBroadcast.Models
         public string Message { get; set; } = string.Empty;
         public string TimeAgo { get; set; } = string.Empty;
         public string Type { get; set; } = string.Empty; // error, warning, info
+        public string PlayoutName { get; set; } = string.Empty;
     }
 
     public class ActiveUser

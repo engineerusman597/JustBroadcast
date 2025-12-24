@@ -10,6 +10,7 @@ namespace JustBroadcast.Services
         Task StartAsync(string accessToken);
         Task StopAsync();
         Task SendRequestStatusSync(string clientId);
+        Task SendCommand(CommandDto command);
         bool IsConnected { get; }
     }
 }

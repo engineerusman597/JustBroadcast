@@ -198,10 +198,22 @@ namespace JustBroadcast.Services
                 if (string.IsNullOrEmpty(userInfoJson))
                     return null;
 
-                return JsonSerializer.Deserialize<UserInfoDto>(userInfoJson);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var userInfo = JsonSerializer.Deserialize<UserInfoDto>(userInfoJson, options);
+
+                // Debug logging
+                Console.WriteLine($"GetCurrentUserAsync - UserInfo: {userInfoJson}");
+                Console.WriteLine($"GetCurrentUserAsync - Role: {userInfo?.Role}");
+
+                return userInfo;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error deserializing user info: {ex.Message}");
                 return null;
             }
         }

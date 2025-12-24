@@ -768,13 +768,13 @@
     margin-top: 6px;
 }
 
-/* Circle for errors */
+/* Circle for errors (Type 0) */
 .error-item-new.error-error .error-icon-new {
     background: #ef4444;
     border-radius: 50%;
 }
 
-/* Triangle for warnings */
+/* Triangle for warnings (Type 1) */
 .error-item-new.error-warning .error-icon-new {
     width: 0;
     height: 0;
@@ -783,6 +783,28 @@
     border-bottom: 9px solid #fbbf24;
     background: transparent;
     margin-top: 4px;
+}
+
+/* Circle with "i" for information (Type 2) */
+.error-item-new.error-info .error-icon-new {
+    width: 16px;
+    height: 16px;
+    background: #3b82f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-top: 2px;
+}
+
+.error-item-new.error-info .error-icon-new::after {
+    content: 'i';
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1;
 }
 
 .error-content-new {
@@ -836,6 +858,84 @@
     .error-frequency-panel {
         grid-column: span 12;
     }
+}
+
+/* Telemetry Toggle */
+.telemetry-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.telemetry-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #ffffff;
+}
+
+.telemetry-btn.telemetry-on {
+    background: #10b981;
+}
+
+.telemetry-btn.telemetry-on:hover {
+    background: #059669;
+}
+
+.telemetry-btn.telemetry-off {
+    background: #ef4444;
+}
+
+.telemetry-btn.telemetry-off:hover {
+    background: #dc2626;
+}
+
+.system-resources-panel .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Debug Button */
+.debug-btn {
+    padding: 6px 12px;
+    background: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.debug-btn:hover {
+    background: #2563eb;
+}
+
+.debug-btn:active {
+    background: #1d4ed8;
+}
+
+/* CPU Chart Styling */
+.cpu-chart {
+    margin-top: 16px;
+}
+
+.chart-tooltip {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.chart-tooltip div {
+    margin: 2px 0;
 }
 
 @media (max-width: 768px) {

@@ -5,7 +5,10 @@ namespace JustBroadcast.Models
         public string command { get; set; } = string.Empty;
         public string clientId { get; set; } = string.Empty;
         public string group { get; set; } = string.Empty;
-        public object? data { get; set; }
+        public string channelId { get; set; } = string.Empty;
+        public string playoutId { get; set; } = string.Empty;
+        public string userid { get; set; } = string.Empty;
+        public object? data { get; set; } = string.Empty;
     }
 
     public class PlayoutListInfo
@@ -21,7 +24,8 @@ namespace JustBroadcast.Models
     public enum ServiceMessages
     {
         RequestStatusSync,
-        ClientStatusChanged
+        ClientStatusChanged,
+        Metrics
     }
 
     public enum ClientType

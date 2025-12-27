@@ -228,14 +228,16 @@
                                 <DxChartSeriesPoint Visible="false"
                                                     HoverMode="ChartSeriesPointHoverMode.None" />
                             </DxChartAreaSeries>
-                            <DxChartArgumentAxis>
-                                <DxChartAxisLabel Format="ChartElementFormat.ShortTime" />
+                            <DxChartArgumentAxis Visible="false">
+                                <DxChartAxisLabel Visible="false" />
+                                <DxChartAxisGridLines Visible="false" />
                             </DxChartArgumentAxis>
                             <DxChartValueAxis>
-                                <DxChartAxisTitle Text="CPU %" />
+                                <DxChartAxisLabel />
+                                <DxChartAxisGridLines Visible="false" />
                             </DxChartValueAxis>
                             <DxChartLegend Visible="false" />
-                            <DxChartTooltip Enabled="true" Position="RelativePosition.Outside">
+                            <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
                                 @context.Point.Render((seriesPoint) =>
                                     @<div class="chart-tooltip">
                                         <div>@($"{seriesPoint.Argument:HH:mm:ss}")</div>
@@ -259,8 +261,16 @@
                                       Name="Errors">
                         <DxChartSeriesPoint HoverMode="ChartSeriesPointHoverMode.Point" />
                     </DxChartBarSeries>
+                <DxChartArgumentAxis Visible="false">
+                    <DxChartAxisLabel Visible="false" />
+                    <DxChartAxisGridLines Visible="false" />
+                </DxChartArgumentAxis>
+                <DxChartValueAxis>
+                    <DxChartAxisLabel />
+                    <DxChartAxisGridLines Visible="false" />
+                </DxChartValueAxis>
                     <DxChartLegend Visible="false" />
-                    <DxChartTooltip Enabled="true" Position="RelativePosition.Outside">
+                    <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
                         <div class="chart-tooltip">
                             <div>@context.Point.Argument</div>
                             <div><strong>@context.Point.Value errors</strong></div>

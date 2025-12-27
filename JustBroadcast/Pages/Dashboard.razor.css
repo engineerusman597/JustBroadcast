@@ -902,6 +902,25 @@
     margin-top: 16px;
 }
 
+/* Hide X-axis (time axis) completely */
+::deep .cpu-chart .dxc-arg-axis,
+::deep .cpu-chart .dxc-arg-axis-label,
+::deep .cpu-chart .dxc-arg-axis text,
+::deep .cpu-chart .dxc-arg-axis line {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Hide horizontal grid lines */
+::deep .cpu-chart .dxc-arg-strips,
+::deep .cpu-chart .dxc-grid-lines-group,
+::deep .cpu-chart .dxc-grid-lines-group line,
+::deep .cpu-chart g[class*="grid-lines"] line {
+    display: none !important;
+    visibility: hidden !important;
+    stroke: none !important;
+}
+
 .chart-tooltip {
     padding: 8px 12px;
     background: rgba(0, 0, 0, 0.8);

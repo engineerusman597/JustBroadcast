@@ -3,12 +3,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1e2746 0%, #2d3561 100%);
+    background: #020618;
     padding: 20px;
 }
 
 .login-card {
-    background: #ffffff;
+    background: #0f172c;
+    color: #ffffff;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     padding: 40px;
@@ -31,14 +32,14 @@
 
 .logo i {
     font-size: 32px;
-    color: #4A90E2;
+    color: #155dfc;
 }
 
 .logo h1 {
     margin: 0;
     font-size: 28px;
     font-weight: 600;
-    color: #1e2746;
+    /* color: #1e2746; */
 }
 
 .subtitle {
@@ -58,7 +59,7 @@
 .form-group label {
     display: block;
     margin-bottom: 8px;
-    color: #1e2746;
+    /* color: #1e2746; */
     font-weight: 500;
     font-size: 14px;
 }
@@ -81,6 +82,7 @@
 ::deep .login-input {
     width: 100%;
     flex: 1;
+    border-radius: 8px;
 }
 
 ::deep .login-input input,
@@ -95,7 +97,7 @@
 
 ::deep .login-input input:focus,
 ::deep .login-input .dxbl-textbox:focus {
-    border-color: #4A90E2;
+    border-color: #155dfc;
     outline: none;
     box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
 }
@@ -175,22 +177,24 @@
 }
 
 .remember-me-label {
-    color: #1e2746;
+    /* color: #1e2746; */
     font-size: 14px;
     font-weight: 400;
     cursor: pointer;
-    margin: 0;
+    margin: 0 !important;
     user-select: none;
 }
 
 ::deep .login-button {
     width: 100%;
-    height: 44px;
+    height: 40px;
     border-radius: 6px;
     font-weight: 500;
     font-size: 16px;
-    background-color: #4A90E2;
-    border-color: #4A90E2;
+    color: #fff;
+    border: 0;
+    background-color: #155dfc;
+    border-color: #155dfc;
 }
 
 ::deep .login-button:hover:not(:disabled) {

@@ -67,12 +67,20 @@ Update `wwwroot/appsettings.json` with your API endpoints:
 ```json
 {
   "ApiSettings": {
-    "BaseUrl": "https://localhost:7000",
-    "LoginEndpoint": "/api/auth/login",
-    "DashboardEndpoint": "/api/dashboard"
+    "BaseUrl": "http://178.222.112.105:5016",
+    "SignalRHub": "http://178.222.112.105:5016/broadcastHub",
+    "UseMockAuth": false,
+    "PlayoutsEndpoint": "/api/Playouts/short",
+    "ChannelsCountEndpoint": "/api/Channels/count",
+    "ErrorsLastWeekEndpoint": "/api/Errors/lastweek",
+    "AssetsCountEndpoint": "/api/Assets/count",
+    "UsersCountEndpoint": "/api/Userlists/count",
+    "SystemSettingsTelemetryEndpoint": "/api/Systemsettings/settelemetrycontrol"
   }
 }
 ```
+
+**Important:** Update the `BaseUrl` and `SignalRHub` to match your backend server location.
 
 ## API Integration
 
@@ -120,36 +128,83 @@ If the API endpoint is not available, the application will use mock data for dem
 
 ### Prerequisites
 
-- .NET 10.0 SDK or later
-- Visual Studio 2022 or VS Code
+Before running this project on another developer's laptop, ensure:
 
-### Installation
+- **.NET 10.0 SDK** or later
+  - Download from: https://dotnet.microsoft.com/download
+  - Verify: `dotnet --version`
 
-1. Clone the repository
-2. Navigate to the project directory
-3. Restore NuGet packages:
+- **Visual Studio 2022** (recommended) or **VS Code**
+  - Visual Studio 2022: Community, Professional, or Enterprise
+  - VS Code: Install C# Dev Kit extension
+
+- **Modern web browser**
+  - Chrome, Edge, Firefox, or Safari (latest versions)
+
+### Installation Steps
+
+1. **Copy the project folder** to the developer's laptop
+
+2. **Navigate to the project directory:**
+   ```bash
+   cd JustBroadcast/JustBroadcast
+   ```
+
+3. **Restore NuGet packages:**
    ```bash
    dotnet restore
    ```
+   This downloads all required dependencies including DevExpress Blazor components.
+
+4. **Verify/Update API configuration:**
+
+   Open `wwwroot/appsettings.json` and update if needed:
+   ```json
+   {
+     "ApiSettings": {
+       "BaseUrl": "http://178.222.112.105:5016",
+       "SignalRHub": "http://178.222.112.105:5016/broadcastHub"
+     }
+   }
+   ```
+
+5. **Build the project:**
+   ```bash
+   dotnet build
+   ```
+   You should see "Build succeeded" message.
 
 ### Running the Application
 
-1. Start the development server:
-   ```bash
-   dotnet run
-   ```
+**Option A: Using Visual Studio 2022**
+1. Open `JustBroadcast.sln` in Visual Studio
+2. Press **F5** or click "Start" button
+3. Application opens in default browser
 
-2. Open your browser and navigate to the displayed URL (typically `https://localhost:5001`)
+**Option B: Using Command Line**
+```bash
+dotnet run
+```
+Application will be available at: `https://localhost:5150`
 
-3. Login with credentials from your API
+**Option C: Using Visual Studio Code**
+1. Open the project folder in VS Code
+2. Press **F5** to start debugging
+3. Or use terminal: `dotnet run`
+
+### First Login
+
+Use your backend API credentials:
+- Username: `admin` or `supervisor`
+- Password: (provided by backend team)
 
 ### Building for Production
 
 ```bash
-dotnet publish -c Release
+dotnet publish -c Release -o ./publish
 ```
 
-The published files will be in `bin/Release/net10.0/publish/wwwroot/`
+The published files will be in `./publish/wwwroot/` folder.
 
 ## Authentication Flow
 
@@ -178,11 +233,26 @@ The application uses extension methods on `ClaimsPrincipal` for role checking:
 
 The dashboard displays:
 - **Stats Cards**: Playouts, Channels, Users, Media Assets, Alerts
-- **Active Playouts Table**: Real-time status of all playouts
-- **System Resources**: CPU, GPU, RAM usage with charts
+- **Active Playouts Table**: Real-time status of all playouts (ON AIR/OFFLINE)
+- **Active Users Panel**: Live tracking of connected users:
+  - Web Dashboard users
+  - Remote Control clients
+  - Scheduler clients
+  - CG Control clients
+- **System Resources**: CPU, GPU, RAM usage with real-time area charts
 - **Error Feed**: Recent errors and warnings
-- **Error Frequency Chart**: 7-day error trends
+- **Error Frequency Chart**: Last 7 days error trends
 - **Alerts**: Important system notifications
+- **Telemetry Control**: Toggle system telemetry ON/OFF
+
+### Real-Time Features (SignalR)
+
+The application uses SignalR for real-time updates:
+- **Playout Status Changes**: Automatic updates when playouts go online/offline
+- **Active Users Tracking**: See who's connected in real-time across all applications
+- **System Metrics**: Live CPU/GPU/RAM monitoring with historical charts
+- **Error Notifications**: Instant error alerts
+- **Multi-User Sync**: All connected dashboards stay synchronized
 
 ## Customization
 
@@ -223,15 +293,74 @@ Main color scheme is defined in CSS files:
 - Verify the API is running and accessible
 - Check browser console for network errors
 
-### DevExpress components not rendering
-- Ensure DevExpress CSS and JS are loaded in `index.html`
-- Check browser console for errors
-- Verify DevExpress.Blazor NuGet package is installed
+### SignalR Connection Issues
+**Symptoms:** "SignalR connection failed" or "HTTP Authentication failed"
+
+**Solutions:**
+1. Verify `SignalRHub` URL in `appsettings.json` is correct
+2. Ensure backend server is running and accessible
+3. Check that JWT token is being sent (look for `[SignalR]` logs in browser console)
+4. Verify firewall/antivirus is not blocking WebSocket connections
+
+### Active Users Not Showing in Real-Time
+**Symptoms:** Users don't appear immediately when they log in
+
+**Solutions:**
+1. Open browser console (F12) and check for `[Users]` log messages
+2. Verify SignalR connection is established (look for "SignalR connected successfully")
+3. Ensure multiple users are logged in from different browsers
+4. Refresh the page to reload the initial snapshot
+
+### System Metrics Not Updating
+**Symptoms:** CPU/GPU/RAM charts are static
+
+**Solutions:**
+1. Check browser console for `[Metrics]` log messages
+2. Verify backend is sending Metrics commands via SignalR
+3. Ensure telemetry is enabled (green "Telemetry ON" button)
+
+### DevExpress Evaluation Warning
+**Symptoms:** Build warning "DX1000: For evaluation purposes only"
+
+**Solution:** This is normal for evaluation mode. The application will work correctly. To remove the warning, register or purchase a DevExpress license.
+
+### Build Errors
+**Symptoms:** Cannot build or restore packages
+
+**Solutions:**
+1. Ensure .NET 10.0 SDK is installed: `dotnet --version`
+2. Delete `bin` and `obj` folders, then run `dotnet restore`
+3. Clear NuGet cache: `dotnet nuget locals all --clear`
 
 ### Navigation menu items not showing
 - Verify user role is correctly set in JWT token
 - Check role claim name matches expected format
 - Verify authorization helper methods in `AuthorizationHelper.cs`
+
+## Development Tips
+
+### Browser Console Debugging
+
+The application provides extensive console logging. Press **F12** to open DevTools:
+
+- `[SignalR]` - SignalR connection and commands
+- `[Users]` - Active users tracking
+- `[Metrics]` - System metrics updates
+- `[API]` - API responses
+
+### Testing Real-Time Features
+
+1. Open the application in **two different browsers** (e.g., Chrome and Edge)
+2. Log in with different users (admin in one, supervisor in another)
+3. Both users should appear in the **Active Users** panel on both dashboards
+4. When one user logs out, they should disappear from the other dashboard immediately
+
+### Hot Reload
+
+When running in development mode (`dotnet run`), the application supports hot reload:
+- Changes to `.razor` files reload the UI automatically
+- Changes to `.cs` files may require a full restart
+- Changes to `.css` files reload styles automatically
 
 ## Technologies Used
 

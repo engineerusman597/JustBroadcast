@@ -117,6 +117,72 @@
     font-size: 18px;
 }
 
+.remember-me-group {
+    margin-bottom: 24px;
+}
+
+::deep .remember-me-checkbox {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+::deep .remember-me-checkbox * {
+    max-width: 18px !important;
+    max-height: 18px !important;
+}
+
+::deep .remember-me-checkbox .dxbs-checkbox,
+::deep .remember-me-checkbox .dx-checkbox,
+::deep .remember-me-checkbox .dxbl-checkbox,
+::deep .remember-me-checkbox .dxbl-checkbox-check-element,
+::deep .remember-me-checkbox .form-check,
+::deep .remember-me-checkbox > div {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    overflow: hidden !important;
+}
+
+::deep .remember-me-checkbox input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    cursor: pointer !important;
+}
+
+::deep .remember-me-checkbox .dx-checkbox-icon,
+::deep .remember-me-checkbox svg,
+::deep .remember-me-checkbox i {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 12px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+}
+
+::deep .remember-me-checkbox label {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+.remember-me-label {
+    color: #1e2746;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    margin: 0;
+    user-select: none;
+}
+
 ::deep .login-button {
     width: 100%;
     height: 44px;

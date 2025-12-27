@@ -36,4 +36,13 @@ namespace JustBroadcast.Models
         CgControl,
         WebDashboard
     }
+
+    public class ClientSession
+    {
+        public string ClientId { get; set; } = string.Empty;
+        public string GroupId { get; set; } = string.Empty;
+        public string? UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+    }
 }

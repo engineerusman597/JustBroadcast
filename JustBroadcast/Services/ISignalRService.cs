@@ -11,6 +11,7 @@ namespace JustBroadcast.Services
         Task StopAsync();
         Task SendRequestStatusSync(string clientId);
         Task SendCommand(CommandDto command);
+        Task<IReadOnlyCollection<ClientSession>> GetClientsSnapshot();
         bool IsConnected { get; }
     }
 }

@@ -607,26 +607,23 @@
     align-items: center;
 }
 
-.settings-icon {
-    color: #6b7280;
-    font-size: 16px;
-    cursor: pointer;
-}
-
-.settings-icon:hover {
-    color: #ffffff;
-}
-
 .users-list {
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
+.no-users-message {
+    padding: 32px 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 14px;
+}
+
 .user-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     padding: 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -635,29 +632,17 @@
     border-bottom: none;
 }
 
-.user-avatar-container {
+.user-app-icon {
     flex-shrink: 0;
-}
-
-.user-avatar-img {
-    width: 48px;
-    height: 48px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    object-fit: cover;
-}
-
-.user-avatar-placeholder {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(59, 130, 246, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #ffffff;
-    font-size: 16px;
-    font-weight: 600;
-    border: 2px solid #2a3447;
+    color: #3b82f6;
+    font-size: 18px;
 }
 
 .user-info {
@@ -667,37 +652,15 @@
     gap: 4px;
 }
 
-.user-name-section {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .user-name-text {
     color: #ffffff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
 }
 
-.user-role {
-    color: #10b981;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.user-last-seen {
-    color: #6b7280;
-    font-size: 11px;
-}
-
-.user-badge {
-    flex-shrink: 0;
-    padding: 4px 10px;
-    background: #10b981;
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 600;
-    border-radius: 12px;
+.user-application {
+    color: #8b92a7;
+    font-size: 13px;
 }
 
 /* Errors Panel (new) */

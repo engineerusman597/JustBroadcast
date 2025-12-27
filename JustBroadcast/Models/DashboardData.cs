@@ -89,10 +89,10 @@ namespace JustBroadcast.Models
 
     public class ActiveUser
     {
+        public string ClientId { get; set; } = string.Empty;
+        public string? UserId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string Avatar { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-        public string LastSeen { get; set; } = string.Empty;
-        public string RoleBadge { get; set; } = string.Empty; // JB1, JB2, etc.
+        public string Application { get; set; } = string.Empty; // RemoteControl, Scheduler, CGControl
+        public string GroupId { get; set; } = string.Empty;
     }
 }

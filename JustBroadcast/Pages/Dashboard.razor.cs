@@ -48,6 +48,9 @@ namespace JustBroadcast.Pages
                     {
                         Console.WriteLine($"[SignalR] Connected! Sending RequestStatusSync with clientId: {_clientId}");
                         await SignalRService.SendRequestStatusSync(_clientId);
+
+                        // Get online users snapshot
+                        await LoadOnlineUsers();
                     }
                     else
                     {
@@ -112,9 +115,19 @@ namespace JustBroadcast.Pages
             if (command.command == ServiceMessages.ClientStatusChanged.ToString())
             {
                 Console.WriteLine($"[SignalR] Processing ClientStatusChanged command");
-                if (!string.IsNullOrEmpty(command.group) && command.group == ClientType.PlayoutServer.ToString())
+                if (!string.IsNullOrEmpty(command.group))
                 {
-                    PlayoutStatusChanged(command);
+                    if (command.group == ClientType.PlayoutServer.ToString())
+                    {
+                        PlayoutStatusChanged(command);
+                    }
+                    else if (command.group == ClientType.RemoteControl.ToString() ||
+                             command.group == ClientType.Scheduler.ToString() ||
+                             command.group == ClientType.CgControl.ToString() ||
+                             command.group == ClientType.WebDashboard.ToString())
+                    {
+                        UserStatusChanged(command);
+                    }
                 }
             }
             else if (command.command == ServiceMessages.Metrics.ToString())
@@ -218,6 +231,129 @@ namespace JustBroadcast.Pages
                 Console.WriteLine($"[Metrics] Exception message: {ex.Message}");
                 Console.WriteLine($"[Metrics] Stack trace: {ex.StackTrace}");
             }
+        }
+
+        private async Task LoadOnlineUsers()
+        {
+            try
+            {
+                Console.WriteLine("[Users] Loading online users from SignalR...");
+                var clients = await SignalRService.GetClientsSnapshot();
+
+                Console.WriteLine($"[Users] Raw clients snapshot count: {clients?.Count ?? 0}");
+
+                if (clients != null)
+                {
+                    foreach (var client in clients)
+                    {
+                        Console.WriteLine($"[Users] Client - ClientId: {client.ClientId}, UserId: {client.UserId}, UserName: {client.UserName}, GroupId: {client.GroupId}, Name: {client.Name}");
+                    }
+                }
+
+                if (dashboardData?.ActiveUsers != null)
+                {
+                    // Filter users with non-null UserId
+                    var users = clients.Where(p => p.UserId != null).ToList();
+                    Console.WriteLine($"[Users] Found {users.Count} users with UserId");
+
+                    foreach (var user in users)
+                    {
+                        Console.WriteLine($"[Users] Filtered user - ClientId: {user.ClientId}, UserId: {user.UserId}, UserName: {user.UserName}, GroupId: {user.GroupId}");
+                    }
+
+                    // Map to ActiveUser model and format application names
+                    dashboardData.ActiveUsers = users.Select(u => new ActiveUser
+                    {
+                        ClientId = u.ClientId,
+                        UserId = u.UserId,
+                        Name = u.UserName,
+                        Application = FormatApplicationName(u.GroupId),
+                        GroupId = u.GroupId
+                    }).ToList();
+
+                    Console.WriteLine($"[Users] Final ActiveUsers count: {dashboardData.ActiveUsers.Count}");
+                    foreach (var activeUser in dashboardData.ActiveUsers)
+                    {
+                        Console.WriteLine($"[Users] ActiveUser - ClientId: {activeUser.ClientId}, UserId: {activeUser.UserId}, Name: {activeUser.Name}, Application: {activeUser.Application}");
+                    }
+
+                    UpdateUserStats();
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Users] ERROR loading online users: {ex.Message}");
+            }
+        }
+
+        private void UserStatusChanged(CommandDto command)
+        {
+            if (dashboardData?.ActiveUsers == null) return;
+
+            try
+            {
+                Console.WriteLine($"[Users] User status changed - ClientId: {command.clientId}, Status: {command.data}");
+
+                var status = command.data?.ToString();
+                var existing = dashboardData.ActiveUsers.FirstOrDefault(p => p.ClientId == command.clientId);
+
+                switch (status)
+                {
+                    case "0": // offline
+                        if (existing != null)
+                        {
+                            dashboardData.ActiveUsers.Remove(existing);
+                            Console.WriteLine($"[Users] Removed user {command.clientId}");
+                        }
+                        break;
+
+                    case "1": // online
+                        if (existing == null && !string.IsNullOrWhiteSpace(command.userid))
+                        {
+                            dashboardData.ActiveUsers.Add(new ActiveUser
+                            {
+                                ClientId = command.clientId,
+                                GroupId = command.group,
+                                UserId = command.userid,
+                                Name = command.playoutId, // UserName from WinForms
+                                Application = FormatApplicationName(command.group)
+                            });
+                            Console.WriteLine($"[Users] Added user {command.clientId} - Name: {command.playoutId}, App: {FormatApplicationName(command.group)}");
+                        }
+                        break;
+                }
+
+                UpdateUserStats();
+                InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Users] ERROR processing user status: {ex.Message}");
+            }
+        }
+
+        private string FormatApplicationName(string groupId)
+        {
+            // Convert "RemoteControl" to "Remote Control" (add space before capital letters)
+            if (string.IsNullOrEmpty(groupId)) return string.Empty;
+
+            return System.Text.RegularExpressions.Regex.Replace(groupId, "([a-z])([A-Z])", "$1 $2");
+        }
+
+        private void UpdateUserStats()
+        {
+            if (dashboardData?.ActiveUsers == null) return;
+
+            // Count unique users
+            var uniqueUsers = dashboardData.ActiveUsers
+                .Select(x => x.UserId)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .Distinct()
+                .Count();
+
+            dashboardData.UserStats.Online = uniqueUsers;
+            Console.WriteLine($"[Users] Unique online users: {uniqueUsers}");
         }
 
         private async Task ToggleTelemetry()
@@ -422,6 +558,41 @@ namespace JustBroadcast.Pages
                     Console.WriteLine($"Exception loading assets: {ex.GetType().Name}");
                     Console.WriteLine($"Message: {ex.Message}");
                 }
+
+                // Try to fetch Users count
+                var usersEndpoint = Configuration["ApiSettings:UsersCountEndpoint"] ?? "/api/Userlists/count";
+                try
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{apiUrl}{usersEndpoint}");
+                    request.Headers.Add("ngrok-skip-browser-warning", "true");
+
+                    var response = await HttpClient.SendAsync(request);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonResponse = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"Users API Response: {jsonResponse}");
+
+                        var usersData = System.Text.Json.JsonSerializer.Deserialize<UserListCountDto>(
+                            jsonResponse,
+                            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        if (usersData != null && dashboardData != null)
+                        {
+                            dashboardData.UserStats.Total = usersData.TotalUsers ?? 0;
+                            Console.WriteLine($"Total users from API: {dashboardData.UserStats.Total}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Users API Error: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Exception loading users: {ex.GetType().Name}");
+                    Console.WriteLine($"Message: {ex.Message}");
+                }
             }
             catch(Exception ex)
             {
@@ -605,10 +776,7 @@ namespace JustBroadcast.Pages
                     new() { Message = "Network timeout", TimeAgo = "16.12.2025 | live.m3u8 @ 2:31:31", Type = "warning" },
                     new() { Message = "Buffer underrun", TimeAgo = "16.12.2025 | live.m3u8 23:02:31", Type = "warning" }
                 },
-                ActiveUsers = new List<ActiveUser>
-                {
-                    new() { Name = "John Doe", Avatar = "", Role = "Remote Control", LastSeen = "last seen less than 1 min ago", RoleBadge = "JB1" }
-                },
+                ActiveUsers = new List<ActiveUser>(),
                 Alerts = new List<AlertItem>
                 {
                     new() { Message = "Output frames drop", TimeAgo = "3 ms ago ago", Type = "info" },
@@ -645,17 +813,6 @@ namespace JustBroadcast.Pages
             }
 
             return history;
-        }
-
-        private string GetUserInitials(string name)
-        {
-            if (string.IsNullOrEmpty(name)) return "U";
-
-            var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length >= 2)
-                return $"{parts[0][0]}{parts[1][0]}".ToUpper();
-
-            return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpper();
         }
 
         public void Dispose()

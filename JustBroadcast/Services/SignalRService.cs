@@ -189,6 +189,29 @@ namespace JustBroadcast.Services
             }
         }
 
+        public async Task<IReadOnlyCollection<ClientSession>> GetClientsSnapshot()
+        {
+            if (_connection?.State != HubConnectionState.Connected)
+            {
+                Console.WriteLine("[SignalRService] SignalR not connected, cannot get clients snapshot");
+                return new List<ClientSession>();
+            }
+
+            try
+            {
+                Console.WriteLine("[SignalRService] Getting clients snapshot...");
+                var clients = await _connection.InvokeAsync<IReadOnlyCollection<ClientSession>>("GetClientsSnapshot");
+                Console.WriteLine($"[SignalRService] ✓ Got {clients?.Count ?? 0} clients from snapshot");
+                return clients ?? new List<ClientSession>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SignalRService] ✗ Error getting clients snapshot: {ex.Message}");
+                Console.WriteLine($"[SignalRService] Stack trace: {ex.StackTrace}");
+                return new List<ClientSession>();
+            }
+        }
+
         public async Task StopAsync()
         {
             if (_connection != null)

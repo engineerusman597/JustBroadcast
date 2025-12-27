@@ -144,36 +144,41 @@
             <div class="panel active-users-panel">
                 <div class="panel-header">
                     <h2>Active Users</h2>
-                    <i class="fas fa-cog settings-icon"></i>
                 </div>
                 <div class="users-list">
-                    @foreach (var user in dashboardData.ActiveUsers)
+                    @if (dashboardData.ActiveUsers.Count == 0)
                     {
-                        <div class="user-item">
-                            <div class="user-avatar-container">
-                                @if (!string.IsNullOrEmpty(user.Avatar))
-                                {
-                                    <img src="@user.Avatar" alt="@user.Name" class="user-avatar-img" />
-                                }
-                                else
-                                {
-                                    <div class="user-avatar-placeholder">
-                                        @GetUserInitials(user.Name)
-                                    </div>
-                                }
-                            </div>
-                            <div class="user-info">
-                                <div class="user-name-section">
-                                    <span class="user-name-text">@user.Name</span>
+                        <div class="no-users-message">No active users</div>
+                    }
+                    else
+                    {
+                        @foreach (var user in dashboardData.ActiveUsers)
+                        {
+                            <div class="user-item">
+                                <div class="user-app-icon">
+                                    @if (user.Application == "Remote Control")
+                                    {
+                                        <i class="fas fa-play-circle"></i>
+                                    }
+                                    else if (user.Application == "Scheduler")
+                                    {
+                                        <i class="fas fa-calendar-alt"></i>
+                                    }
+                                    else if (user.Application == "Cg Control")
+                                    {
+                                        <i class="fas fa-film"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-user"></i>
+                                    }
                                 </div>
-                                <div class="user-role">@user.Role</div>
-                                <div class="user-last-seen">@user.LastSeen</div>
+                                <div class="user-info">
+                                    <div class="user-name-text">@user.Name</div>
+                                    <div class="user-application">@user.Application</div>
+                                </div>
                             </div>
-                            @if (!string.IsNullOrEmpty(user.RoleBadge))
-                            {
-                                <div class="user-badge">@user.RoleBadge</div>
-                            }
-                        </div>
+                        }
                     }
                 </div>
             </div>

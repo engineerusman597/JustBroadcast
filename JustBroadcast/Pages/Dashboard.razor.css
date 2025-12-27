@@ -633,7 +633,7 @@
 .user-item {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
     padding: 12px 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -653,24 +653,26 @@
     justify-content: center;
     color: #155dfc;
     font-size: 18px;
+    border: 1px solid #00a63d;
 }
 
 .user-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 0px;
 }
 
 .user-name-text {
     color: #ffffff;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
+    margin-bottom: 1px;
 }
 
 .user-application {
     color: #8b92a7;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 /* Errors Panel (new) */

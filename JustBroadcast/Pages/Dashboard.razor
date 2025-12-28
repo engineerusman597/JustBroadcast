@@ -14,7 +14,7 @@
 
 <div class="dashboard-container">
     <div class="dashboard-header">
-        <h1>Just Broadcast Dashboard</h1>
+        <h1>Dashboard</h1>
         <p>Monitor your playout operations</p>
     </div>
 
@@ -230,23 +230,24 @@
                                 <DxChartSeriesPoint Visible="false"
                                                     HoverMode="ChartSeriesPointHoverMode.None" />
                             </DxChartAreaSeries>
-                            
                             <DxChartArgumentAxis Visible="false">
-                                <DxChartAxisGridLines Visible="false" />
                                 <DxChartAxisLabel Visible="false" />
-                                <DxChartAxisTick Visible="false" />
+                                <DxChartAxisGridLines Visible="false" />
                             </DxChartArgumentAxis>
-
-                            <DxChartValueAxis Visible="false">
+                            <DxChartValueAxis>
+                                <DxChartAxisLabel />
                                 <DxChartAxisGridLines Visible="false" />
-                                <DxChartAxisLabel Visible="false" />
-                                <DxChartAxisTick Visible="false" />
-                                <DxChartConstantLine Visible="false" />
                             </DxChartValueAxis>
 
                             <DxChartLegend Visible="false" />
-                            <DxChartTooltip Enabled="false" />
-                            
+                            <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
+                                @context.Point.Render((seriesPoint) =>
+                                    @<div class="chart-tooltip">
+                                        <div>@($"{seriesPoint.Argument:HH:mm:ss}")</div>
+                                        <div><strong>@($"{seriesPoint.Value}%")</strong></div>
+                                    </div>
+                                )
+                            </DxChartTooltip>
                         </DxChart>
                     </div>
                 </div>
@@ -263,22 +264,21 @@
                                       Name="Errors">
                         <DxChartSeriesPoint HoverMode="ChartSeriesPointHoverMode.Point" />
                     </DxChartBarSeries>
-
-                    <DxChartArgumentAxis Visible="true">
-                        <DxChartAxisLabel Visible="true" />
-                        <DxChartAxisGridLines Visible="false" />
-                        <DxChartAxisTick Visible="false" />
-                    </DxChartArgumentAxis>
-
-                    <DxChartValueAxis Visible="false">
-                        <DxChartAxisGridLines Visible="false" />
-                        <DxChartAxisLabel Visible="false" />
-                        <DxChartAxisTick Visible="false" />
-                        <DxChartConstantLine Visible="false" />
-                    </DxChartValueAxis>
-
+                <DxChartArgumentAxis Visible="false">
+                    <DxChartAxisLabel Visible="false" />
+                    <DxChartAxisGridLines Visible="false" />
+                </DxChartArgumentAxis>
+                <DxChartValueAxis>
+                    <DxChartAxisLabel />
+                    <DxChartAxisGridLines Visible="false" />
+                </DxChartValueAxis>
                     <DxChartLegend Visible="false" />
-
+                    <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
+                        <div class="chart-tooltip">
+                            <div>@context.Point.Argument</div>
+                            <div><strong>@context.Point.Value errors</strong></div>
+                        </div>
+                    </DxChartTooltip>
                 </DxChart>
                 <div class="chart-footer">
                     <div class="recommended-actions">

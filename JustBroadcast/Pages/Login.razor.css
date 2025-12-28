@@ -24,10 +24,26 @@
 
 .logo {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     gap: 12px;
-    margin-bottom: 8px;
+    margin-bottom: 0px;
+}
+
+.company-logo {
+    width: auto;
+    height: 50px;
+    max-width: 100%;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
 }
 
 .logo i {
@@ -37,15 +53,17 @@
 
 .logo h1 {
     margin: 0;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 600;
-    /* color: #1e2746; */
+    color: #ffffff;
+    line-height: 1.2;
 }
 
 .subtitle {
     margin: 0;
     color: #7F8FA4;
     font-size: 14px;
+    line-height: 1;
 }
 
 .login-form {

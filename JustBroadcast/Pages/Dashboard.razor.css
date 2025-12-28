@@ -470,7 +470,11 @@
 /* Chart Styling */
 ::deep .dxc-chart {
     background: transparent !important;
-    height: 160px;
+    height: 120px;
+}
+::deep .system-resources-panel .dxc-chart {
+    background: transparent !important;
+    height: 100px;
 }
 
 ::deep .dxbl-widget-container.dx-visibility-change-handler {
@@ -492,9 +496,13 @@
     stroke-width: 1px !important;
 }
 
-::deep .dxc-chart .dxc-series path,
+::deep .dxc-chart .dxc-series path {
+    stroke: #15b8a6 !important;
+    stroke-width: 2px !important;
+    fill: none !important;
+}
 ::deep .dxc-chart .dxc-series line {
-    stroke: #155dfc !important;
+    stroke: #3a83f6 !important;
     stroke-width: 2px !important;
     fill: none !important;
 }
@@ -505,6 +513,18 @@
 
 ::deep .dxc-chart .dxc-axis-line {
     stroke: #1e2539 !important;
+}
+
+::deep .dx-chart .dxc-grid,
+::deep .dx-chart .dxc-constant-line,
+::deep .dx-chart .dxc-axis,
+::deep .dx-chart .dxc-label {
+    display: none !important;
+}
+
+::deep .dx-chart path {
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* Error Frequency Chart */

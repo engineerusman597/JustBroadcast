@@ -216,7 +216,7 @@
                     <div class="cpu-chart">
                         <DxChart Data="@dashboardData.SystemResources.CpuHistory"
                                  Width="100%"
-                                 Height="150px"
+                                 Height="200px"
                                  LabelOverlap="ChartLabelOverlap.Hide">
                             <DxChartAreaSeries Name="CPU Usage"
                                                T="CpuDataPoint"
@@ -224,9 +224,7 @@
                                                TValue="int"
                                                ArgumentField="@(point => point.Time)"
                                                ValueField="@(point => point.Value)"
-                                               SplineMode="ChartSplineMode.Natural"
                                                HoverMode="ChartContinuousSeriesHoverMode.None">
-                                               <DxChartSeriesBorder Color="#15b8a6" Width="3" />
                                 <DxChartSeriesPoint Visible="false"
                                                     HoverMode="ChartSeriesPointHoverMode.None" />
                             </DxChartAreaSeries>
@@ -238,55 +236,54 @@
                                 <DxChartAxisLabel />
                                 <DxChartAxisGridLines Visible="false" />
                             </DxChartValueAxis>
-
                             <DxChartLegend Visible="false" />
                             <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
                                 @context.Point.Render((seriesPoint) =>
-                                    @<div class="chart-tooltip">
-                                        <div>@($"{seriesPoint.Argument:HH:mm:ss}")</div>
-                                        <div><strong>@($"{seriesPoint.Value}%")</strong></div>
-                                    </div>
-                                )
-                            </DxChartTooltip>
-                        </DxChart>
-                    </div>
+                                                    @<div class="chart-tooltip">
+                                <div>@($"{seriesPoint.Argument:HH:mm:ss}")</div>
+                                <div><strong>@($"{seriesPoint.Value}%")</strong></div>
+                            </div>
+                                                        )
+                        </DxChartTooltip>
+                    </DxChart>
+                </div>
                 </div>
             </div>
 
-            <!-- Error Frequency Chart -->
-            <div class="panel error-frequency-panel">
-                <div class="panel-header">
-                    <h2>Error Frequency (last 7 days)</h2>
-                </div>
-                <DxChart Data="@errorFrequencyData" Width="100%">
-                    <DxChartBarSeries ArgumentField="@((ErrorFrequencyItem v) => v.Day)"
-                                      ValueField="@((ErrorFrequencyItem v) => v.Count)"
-                                      Name="Errors">
-                        <DxChartSeriesPoint HoverMode="ChartSeriesPointHoverMode.Point" />
-                    </DxChartBarSeries>
-                <DxChartArgumentAxis Visible="false">
-                    <DxChartAxisLabel Visible="false" />
+        <!-- Error Frequency Chart -->
+        <div class="panel error-frequency-panel">
+            <div class="panel-header">
+                <h2>Error Frequency (last 7 days)</h2>
+            </div>
+            <DxChart Data="@errorFrequencyData" Width="100%">
+                <DxChartBarSeries ArgumentField="@((ErrorFrequencyItem v) => v.Day)"
+                                  ValueField="@((ErrorFrequencyItem v) => v.Count)"
+                                  Name="Errors">
+                    <DxChartSeriesPoint HoverMode="ChartSeriesPointHoverMode.Point" />
+                </DxChartBarSeries>
+                <DxChartArgumentAxis Visible="true">
+                    <DxChartAxisLabel />
                     <DxChartAxisGridLines Visible="false" />
                 </DxChartArgumentAxis>
                 <DxChartValueAxis>
                     <DxChartAxisLabel />
                     <DxChartAxisGridLines Visible="false" />
                 </DxChartValueAxis>
-                    <DxChartLegend Visible="false" />
-                    <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
-                        <div class="chart-tooltip">
-                            <div>@context.Point.Argument</div>
-                            <div><strong>@context.Point.Value errors</strong></div>
-                        </div>
-                    </DxChartTooltip>
-                </DxChart>
-                <div class="chart-footer">
-                    <div class="recommended-actions">
-                        <div class="recommended-label">RECOMMENDED ACTIONS</div>
-                        <div class="recommended-item">Ffmpeg update required</div>
+                <DxChartLegend Visible="false" />
+                <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
+                    <div class="chart-tooltip">
+                        <div>@context.Point.Argument</div>
+                        <div><strong>@context.Point.Value errors</strong></div>
                     </div>
+                </DxChartTooltip>
+            </DxChart>
+            <div class="chart-footer">
+                <div class="recommended-actions">
+                    <div class="recommended-label">RECOMMENDED ACTIONS</div>
+                    <div class="recommended-item">Ffmpeg update required</div>
                 </div>
             </div>
+        </div>
 
             <!-- Errors (previously Alerts) -->
             <div class="panel errors-panel">

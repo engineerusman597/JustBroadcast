@@ -216,7 +216,7 @@
                     <div class="cpu-chart">
                         <DxChart Data="@dashboardData.SystemResources.CpuHistory"
                                  Width="100%"
-                                 Height="200px"
+                                 Height="150px"
                                  LabelOverlap="ChartLabelOverlap.Hide">
                             <DxChartAreaSeries Name="CPU Usage"
                                                T="CpuDataPoint"
@@ -224,7 +224,9 @@
                                                TValue="int"
                                                ArgumentField="@(point => point.Time)"
                                                ValueField="@(point => point.Value)"
+                                               SplineMode="ChartSplineMode.Natural"
                                                HoverMode="ChartContinuousSeriesHoverMode.None">
+                                               <DxChartSeriesBorder Color="#15b8a6" Width="3" />
                                 <DxChartSeriesPoint Visible="false"
                                                     HoverMode="ChartSeriesPointHoverMode.None" />
                             </DxChartAreaSeries>
@@ -236,6 +238,7 @@
                                 <DxChartAxisLabel />
                                 <DxChartAxisGridLines Visible="false" />
                             </DxChartValueAxis>
+
                             <DxChartLegend Visible="false" />
                             <DxChartTooltip Enabled="false" Position="RelativePosition.Outside">
                                 @context.Point.Render((seriesPoint) =>

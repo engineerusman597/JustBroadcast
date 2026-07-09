@@ -1,0 +1,72 @@
+@using DevExpress.Blazor
+@* Error Frequency (last 7 days) + Errors list, as two separate row-4 cards. *@
+
+<section class="card card-errfreq">
+    <header class="card-h"><span>ERROR FREQUENCY (Last 7 Days)</span></header>
+    <DxChart Data="@_frequency" Width="100%" Height="130px">
+        <DxChartBarSeries ArgumentField="@((FreqItem v) => v.Day)"
+                          ValueField="@((FreqItem v) => v.Count)"
+                          Name="Errors"
+                          Color="System.Drawing.Color.FromArgb(45, 121, 247)">
+            <DxChartSeriesPoint HoverMode="ChartSeriesPointHoverMode.Point" />
+        </DxChartBarSeries>
+        <DxChartArgumentAxis Visible="true"><DxChartAxisLabel /><DxChartAxisGridLines Visible="false" /></DxChartArgumentAxis>
+        <DxChartValueAxis Visible="false"><DxChartAxisLabel Visible="false" /><DxChartAxisGridLines Visible="false" /></DxChartValueAxis>
+        <DxChartLegend Visible="false" />
+    </DxChart>
+    <div class="errfreq-footer">
+        <div class="errfreq-actions-label">RECOMMENDED ACTIONS</div>
+        <div class="errfreq-actions">@RecommendedAction</div>
+    </div>
+</section>
+
+<section class="card card-errors">
+    <header class="card-h"><span>ERRORS (Last 7 Days)</span><span class="card-h-right">TOTAL @(Errors?.Count ?? 0)</span></header>
+    <div class="errors2-list">
+        @if (Errors == null || Errors.Count == 0)
+        {
+            <div class="errors2-empty">No errors</div>
+        }
+        else
+        {
+            @foreach (var e in Errors.OrderByDescending(x => x.Time).Take(20))
+            {
+                <div class="errors2-row error2-@TypeClass(e.Type)">
+                    <span class="err2-dot"></span>
+                    <div class="err2-body">
+                        <div class="err2-msg">@e.Description</div>
+                        <div class="err2-meta">@e.Time.ToString("dd.MM.yyyy @ HH:mm:ss")</div>
+                    </div>
+                    <span class="err2-badge">@e.PlayoutName</span>
+                </div>
+            }
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public List<ErrorListDto>? Errors { get; set; }
+
+    private List<FreqItem> _frequency = new();
+
+    public class FreqItem { public string Day { get; set; } = ""; public int Count { get; set; } }
+
+    protected override void OnParametersSet() => BuildFrequency();
+
+    private string RecommendedAction =>
+        (Errors?.Count ?? 0) == 0 ? "System is in good condition" : "Review recent errors";
+
+    private void BuildFrequency()
+    {
+        var now = DateTime.Now;
+        _frequency = new List<FreqItem>();
+        for (int i = 6; i >= 0; i--)
+        {
+            var date = now.AddDays(-i).Date;
+            var count = Errors?.Count(e => e.Time.Date == date) ?? 0;
+            _frequency.Add(new FreqItem { Day = date.ToString("ddd"), Count = count });
+        }
+    }
+
+    private static string TypeClass(int type) => type == 0 ? "error" : type == 1 ? "warning" : "info";
+}

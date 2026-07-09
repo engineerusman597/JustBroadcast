@@ -34,6 +34,11 @@ namespace JustBroadcast
             // Add SignalR
             builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
+            // Playout dashboard services
+            builder.Services.AddScoped<IPlayoutApiService, PlayoutApiService>();
+            builder.Services.AddScoped<IPlayoutSettingsService, PlayoutSettingsService>();
+            builder.Services.AddSingleton<IMockPlayoutFeed, MockPlayoutFeed>();
+
             await builder.Build().RunAsync();
         }
     }

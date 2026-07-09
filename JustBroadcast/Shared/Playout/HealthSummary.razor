@@ -1,0 +1,18 @@
+@* Health summary as an icon-led vertical list with coloured values (matches reference). *@
+
+<div class="health2">
+    <div class="health2-row"><i class="fas fa-tachometer-alt h2-ic"></i><span class="h2-label">FPS (Avg)</span><span class="h2-val h2-cyan">@(Data?.AverageFps ?? "0.00")</span></div>
+    <div class="health2-row"><i class="fas fa-play h2-ic"></i><span class="h2-label">Desired FPS</span><span class="h2-val h2-cyan">@(Data?.DesiredFps ?? "0.00")</span></div>
+    <div class="health2-row"><i class="fas fa-wave-square h2-ic"></i><span class="h2-label">Jitter</span><span class="h2-val h2-amber">@(Data?.Jitter ?? "0.00")</span></div>
+    <div class="health2-row"><i class="fas fa-sliders-h h2-ic"></i><span class="h2-label">A/V Sync</span><span class="h2-val h2-cyan">@(Data?.AvSync ?? "0.00")</span></div>
+    <div class="health2-row"><i class="fas fa-clock h2-ic"></i><span class="h2-label">Avg. Input Time</span><span class="h2-val h2-cyan">@(Data?.InputAvg ?? "0.00")</span></div>
+    <div class="health2-row"><i class="fas fa-unlink h2-ic"></i><span class="h2-label">Breaks</span><span class="h2-val h2-amber">@(Data?.Breaks ?? 0)</span></div>
+    <div class="health2-row"><i class="fas fa-arrow-down h2-ic"></i><span class="h2-label">Dropped Frames</span><span class="h2-val h2-green">@(Data?.DroppedFrames ?? 0)</span></div>
+    <div class="health2-row"><i class="fas fa-tag h2-ic"></i><span class="h2-label">SCTE 104</span><span class="h2-val h2-green">@(Data?.Scte104 ?? 0)</span></div>
+    <div class="health2-row"><i class="far fa-dot-circle h2-ic"></i><span class="h2-label">SCTE 35</span><span class="h2-val h2-green">@(Data?.Scte35 ?? 0)</span></div>
+    <div class="health2-row"><i class="far fa-clock h2-ic"></i><span class="h2-label">Run Time</span><span class="h2-val h2-cyan">@(Data?.Runtime ?? "0:00:00:00")</span></div>
+</div>
+
+@code {
+    [Parameter] public PlaylistInfoMessageDto? Data { get; set; }
+}

@@ -74,8 +74,20 @@ namespace JustBroadcast.Layout
 
         private string GetUserName()
         {
+            Console.WriteLine($"GetUserName - userInfo: {userInfo != null}");
+            Console.WriteLine($"GetUserName - Name: {userInfo?.Name}");
+            Console.WriteLine($"GetUserName - Username: {userInfo?.Username}");
+
             if (userInfo == null) return "User";
-            return userInfo.Name ?? userInfo.Username ?? "User";
+
+            // Capitalize first letter of username if used
+            var username = userInfo.Username;
+            if (!string.IsNullOrEmpty(username))
+            {
+                username = char.ToUpper(username[0]) + username.Substring(1);
+            }
+
+            return userInfo.Name ?? username ?? "User";
         }
 
         private string GetUserRole()
@@ -83,7 +95,13 @@ namespace JustBroadcast.Layout
             Console.WriteLine($"GetUserRole - userInfo: {userInfo != null}");
             Console.WriteLine($"GetUserRole - Role: {userInfo?.Role}");
 
-            if (userInfo?.Role == null)
+            if (userInfo == null)
+            {
+                Console.WriteLine("GetUserRole - userInfo is null, returning 'User'");
+                return "User";
+            }
+
+            if (userInfo.Role == null)
             {
                 Console.WriteLine("GetUserRole - Role is null, returning 'User'");
                 return "User";

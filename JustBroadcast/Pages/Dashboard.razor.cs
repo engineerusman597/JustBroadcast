@@ -599,19 +599,23 @@ namespace JustBroadcast.Pages
                 LoadMockData();
             }
 
-            // Prepare error frequency data for chart
+            // Prepare error frequency data for chart (last 7 days in chronological order)
             if (dashboardData != null)
             {
-                errorFrequencyData = new List<ErrorFrequencyItem>
+                var now = DateTime.Now;
+                errorFrequencyData = new List<ErrorFrequencyItem>();
+
+                // Generate last 7 days in reverse order (oldest to newest)
+                for (int i = 6; i >= 0; i--)
                 {
-                    new() { Day = "Mon", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Mon", 0) },
-                    new() { Day = "Tue", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Tue", 0) },
-                    new() { Day = "Wed", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Wed", 0) },
-                    new() { Day = "Thu", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Thu", 0) },
-                    new() { Day = "Fri", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Fri", 0) },
-                    new() { Day = "Sat", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Sat", 0) },
-                    new() { Day = "Sun", Count = dashboardData.ErrorFrequency.GetValueOrDefault("Sun", 0) }
-                };
+                    var date = now.AddDays(-i);
+                    var dayName = date.ToString("ddd");
+                    errorFrequencyData.Add(new ErrorFrequencyItem
+                    {
+                        Day = dayName,
+                        Count = dashboardData.ErrorFrequency.GetValueOrDefault(dayName, 0)
+                    });
+                }
             }
 
             isLoading = false;
@@ -742,6 +746,19 @@ namespace JustBroadcast.Pages
                 var count = errors.Count(e => e.Time.Date == day);
                 dashboardData.ErrorFrequency[dayName] = count;
             }
+
+            // Update chart data
+            errorFrequencyData = new List<ErrorFrequencyItem>();
+            for (int i = 6; i >= 0; i--)
+            {
+                var date = now.AddDays(-i);
+                var dayName = date.ToString("ddd");
+                errorFrequencyData.Add(new ErrorFrequencyItem
+                {
+                    Day = dayName,
+                    Count = dashboardData.ErrorFrequency.GetValueOrDefault(dayName, 0)
+                });
+            }
         }
 
         private void LoadMockData()
@@ -779,10 +796,14 @@ namespace JustBroadcast.Pages
                 ActiveUsers = new List<ActiveUser>(),
                 Alerts = new List<AlertItem>
                 {
-                    new() { Message = "Output frames drop", TimeAgo = "3 ms ago ago", Type = "info" },
-                    new() { Message = "Ad breaks missed", TimeAgo = "35 m ago ago", Type = "warning" },
-                    new() { Message = "Audio channels mis", TimeAgo = "11 ago ago", Type = "warning" },
-                    new() { Message = "FPS drops", TimeAgo = "15 ago ago", Type = "warning" }
+                    new() { Message = "Buffer underrun", TimeAgo = "28.12.2025 @ 18:35:00", Type = "error", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Audio format mismatch", TimeAgo = "25.12.2025 @ 11:05:00", Type = "warning", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Stream connection lost", TimeAgo = "23.12.2025 @ 17:25:00", Type = "error", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Video engine crash", TimeAgo = "27.12.2025 @ 21:05:00", Type = "warning", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Network timeout", TimeAgo = "26.12.2025 @ 21:05:00", Type = "info", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Output frames drop", TimeAgo = "24.12.2025 @ 03:15:00", Type = "info", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Ad breaks missed", TimeAgo = "22.12.2025 @ 09:45:00", Type = "warning", PlayoutName = "I9 ULTIMATE" },
+                    new() { Message = "Audio channels mismatch", TimeAgo = "21.12.2025 @ 14:20:00", Type = "error", PlayoutName = "I9 ULTIMATE" }
                 },
                 ErrorFrequency = new Dictionary<string, int>
                 {

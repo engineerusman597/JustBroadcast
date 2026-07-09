@@ -1,0 +1,60 @@
+@using JustBroadcast.Services
+@* Compact playout tile used in the 2/4/6/8-up All Playouts grid. *@
+
+<div class="playout-tile @(IsOnline ? "" : "tile-offline")" @onclick="HandleClick">
+    <div class="tile-header">
+        <span class="tile-name">@Name</span>
+        <span class="tile-state @(IsOnline ? "state-online" : "state-offline")">
+            @(IsOnline ? "ONLINE" : "OFFLINE")
+        </span>
+    </div>
+
+    <div class="tile-preview">
+        @if (IsOnline && !string.IsNullOrEmpty(FrameSrc))
+        {
+            <img class="tile-frame" src="@FrameSrc" alt="preview" />
+        }
+        else
+        {
+            <div class="tile-frame tile-frame-empty">@(IsOnline ? "NO SIGNAL" : "OFFLINE")</div>
+        }
+        <div class="tile-vu">
+            <VuMeter Audio="@Data?.Audio" />
+        </div>
+    </div>
+
+    <div class="tile-footer">
+        <span class="tile-status @(Playing ? "np-onair" : "np-stopped")">
+            @(Playing ? "ON AIR" : "STOPPED")
+        </span>
+        <span class="tile-item">@ItemName</span>
+        <span class="tile-fps">@(Data?.AverageFps ?? "0.00") fps</span>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string PlayoutId { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public bool IsOnline { get; set; }
+    [Parameter] public PlaylistInfoMessageDto? Data { get; set; }
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+
+    private bool Playing => Data?.IsPlaying ?? false;
+    private string ItemName => string.IsNullOrEmpty(Data?.CurrentlyPlayingItemName) ? "—" : Data!.CurrentlyPlayingItemName;
+
+    private string? FrameSrc
+    {
+        get
+        {
+            var frame = Data?.Frame?.ToString();
+            if (string.IsNullOrEmpty(frame)) return null;
+            return frame.StartsWith("data:") ? frame : $"data:image/jpeg;base64,{frame}";
+        }
+    }
+
+    private async Task HandleClick()
+    {
+        if (OnSelect.HasDelegate)
+            await OnSelect.InvokeAsync(PlayoutId);
+    }
+}

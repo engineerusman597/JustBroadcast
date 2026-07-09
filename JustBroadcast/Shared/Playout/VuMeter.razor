@@ -1,0 +1,28 @@
+@* Two-channel VU meter fed by PlaylistInfoMessageDto.Audio (int[2]). *@
+
+<div class="vu-meter">
+    @for (int ch = 0; ch < 2; ch++)
+    {
+        var level = GetLevel(ch);
+        <div class="vu-channel">
+            <div class="vu-track">
+                <div class="vu-fill @LevelClass(level)" style="height:@(level)%"></div>
+            </div>
+            <div class="vu-label">@(ch == 0 ? "L" : "R")</div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int[]? Audio { get; set; }
+
+    // Audio values are treated as 0..100 percentage of full scale.
+    private int GetLevel(int ch)
+    {
+        if (Audio == null || Audio.Length <= ch) return 0;
+        return Math.Clamp(Audio[ch], 0, 100);
+    }
+
+    private string LevelClass(int level) =>
+        level >= 90 ? "vu-hot" : level >= 70 ? "vu-warm" : "vu-ok";
+}

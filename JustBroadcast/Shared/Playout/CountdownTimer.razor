@@ -1,0 +1,56 @@
+@implements IDisposable
+@* Counts down to Target (future). Fires OnExpired once when it reaches zero. *@
+
+<span class="countdown-value">@Display</span>
+
+@code {
+    [Parameter] public DateTime? Target { get; set; }
+    [Parameter] public EventCallback OnExpired { get; set; }
+
+    private System.Threading.Timer? _timer;
+    private bool _expiredFired;
+    public string Display { get; private set; } = "00:00:00";
+
+    protected override void OnInitialized()
+    {
+        _timer = new System.Threading.Timer(_ => InvokeAsync(Tick), null, 0, 1000);
+    }
+
+    protected override void OnParametersSet()
+    {
+        _expiredFired = false;
+        Recalculate();
+    }
+
+    private void Tick()
+    {
+        Recalculate();
+        StateHasChanged();
+    }
+
+    private async void Recalculate()
+    {
+        if (Target == null)
+        {
+            Display = "00:00:00";
+            return;
+        }
+
+        var remaining = Target.Value - DateTime.Now;
+        if (remaining <= TimeSpan.Zero)
+        {
+            Display = "00:00:00";
+            if (!_expiredFired)
+            {
+                _expiredFired = true;
+                if (OnExpired.HasDelegate)
+                    await OnExpired.InvokeAsync();
+            }
+            return;
+        }
+
+        Display = $"{(int)remaining.TotalHours:00}:{remaining.Minutes:00}:{remaining.Seconds:00}";
+    }
+
+    public void Dispose() => _timer?.Dispose();
+}

@@ -1,0 +1,97 @@
+@using JustBroadcast.Services
+@* Outputs table matching reference: dot+name | type | fps | fps sparkline | status | resets. *@
+
+<div class="outputs2">
+    <div class="outputs2-head">
+        <span>OUTPUT</span><span>TYPE</span><span>FPS</span><span>FPS GRAPH (60s)</span><span>STATUS</span><span>RESETS</span>
+    </div>
+    @if (Outputs == null || Outputs.Count == 0)
+    {
+        <div class="outputs2-empty">No outputs</div>
+    }
+    else
+    {
+        @foreach (var o in Outputs)
+        {
+            var msg = MessageFor(o.Id);
+            var health = PlayoutHelper.HealthDisplay(msg?.HealthStatus ?? HealthStatus.Unknown);
+            var fps = PlayoutHelper.FormatFps(msg?.FPS);
+            <div class="outputs2-row @(SelectedId == o.Id ? "selected" : "")">
+                <span class="o2-name">
+                    <span class="o2-dot" style="background:@(msg?.IsStarted == true ? health.Color : "#2d79f7")"></span>
+                    @(o.OutputName ?? "Output")
+                </span>
+                <span class="o2-type">@(PlayoutHelper.GetEnumDescription<OutputTypes>(o.OutputType))</span>
+                <span class="o2-fps" @onclick="() => Toggle(o.Id)">@fps</span>
+                <span class="o2-spark">
+                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" class="spark-svg">
+                        <polyline points="@Spark(o.Id, fps)" fill="none" stroke="@health.Color" stroke-width="1.5" />
+                    </svg>
+                </span>
+                <span class="o2-status" style="color:@health.Color">@health.Label</span>
+                <span class="o2-resets">@(msg?.Resets ?? 0)</span>
+
+                @if (SelectedId == o.Id)
+                {
+                    <OutputFpsPopover Output="o"
+                                      Message="msg"
+                                      OnClose="() => SelectedId = null"
+                                      OnStartStop="(started) => StartStop(o, started)" />
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public List<PlayoutoutputShortDto>? Outputs { get; set; }
+    [Parameter] public List<OutputInfoMessageDto>? Messages { get; set; }
+    [Parameter] public EventCallback<StartStopOuputDto> OnStartStopOutput { get; set; }
+    [Parameter] public string? PlayoutId { get; set; }
+
+    private string? SelectedId;
+    private readonly Dictionary<string, Queue<double>> _hist = new();
+
+    private OutputInfoMessageDto? MessageFor(string id) =>
+        Messages?.FirstOrDefault(m => m.OutputId == id);
+
+    private void Toggle(string id) => SelectedId = SelectedId == id ? null : id;
+
+    // Rolling 30-sample sparkline; returns SVG polyline points scaled into 100x30.
+    private string Spark(string id, string fpsText)
+    {
+        if (!_hist.TryGetValue(id, out var q)) { q = new Queue<double>(); _hist[id] = q; }
+        double.TryParse(fpsText, System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture, out var v);
+        q.Enqueue(v);
+        while (q.Count > 30) q.Dequeue();
+
+        var arr = q.ToArray();
+        if (arr.Length < 2) return "";
+        double max = Math.Max(arr.Max(), 1);
+        double min = Math.Min(arr.Min(), 0);
+        double range = Math.Max(max - min, 1);
+        var pts = new System.Text.StringBuilder();
+        for (int i = 0; i < arr.Length; i++)
+        {
+            double x = (100.0 * i) / (arr.Length - 1);
+            double y = 28 - ((arr[i] - min) / range) * 26;
+            pts.Append($"{x:0.#},{y:0.#} ");
+        }
+        return pts.ToString().Trim();
+    }
+
+    private async Task StartStop(PlayoutoutputShortDto output, bool desiredStarted)
+    {
+        if (OnStartStopOutput.HasDelegate)
+        {
+            await OnStartStopOutput.InvokeAsync(new StartStopOuputDto
+            {
+                PlayoutId = PlayoutId,
+                OutputId = output.Id,
+                IsStarted = desiredStarted
+            });
+        }
+        SelectedId = null;
+    }
+}

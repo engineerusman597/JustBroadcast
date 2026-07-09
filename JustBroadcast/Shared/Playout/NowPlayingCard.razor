@@ -1,0 +1,59 @@
+@using JustBroadcast.Services
+@* Now Playing: preview frame + VU meter (dB scale), item name, on-air/countdown times, progress. *@
+
+<div class="np2">
+    <div class="np2-preview-wrap">
+        <div class="np2-preview">
+            @if (!string.IsNullOrEmpty(FrameSrc))
+            {
+                <img class="np2-frame" src="@FrameSrc" alt="preview" />
+            }
+            else
+            {
+                <div class="np2-frame np2-frame-empty">NO SIGNAL</div>
+            }
+        </div>
+        <div class="np2-vu">
+            <VuMeter Audio="@Data?.Audio" />
+            <div class="np2-db">
+                <span>0dB</span><span>-10</span><span>-20</span><span>-30</span><span>-60</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="np2-name">@ItemName</div>
+    <div class="np2-started">Started: @StartTime</div>
+
+    <div class="np2-progress"><div class="np2-progress-fill" style="width:@(Progress)%"></div></div>
+
+    <div class="np2-times">
+        <div class="np2-time-col">
+            <span class="np2-time">@OnAir</span>
+            <span class="np2-time-label">Item On Air</span>
+        </div>
+        <div class="np2-time-col np2-time-right">
+            <span class="np2-time">@Remaining</span>
+            <span class="np2-time-label">Item Countdown</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public PlaylistInfoMessageDto? Data { get; set; }
+
+    private string ItemName => string.IsNullOrEmpty(Data?.CurrentlyPlayingItemName) ? "—" : Data!.CurrentlyPlayingItemName;
+    private string StartTime => Data?.StartTime ?? "00:00:00";
+    private string OnAir => PlayoutHelper.Dbl2PosStrNoMiliseconds(Data?.FileTime ?? 0);
+    private string Remaining => PlayoutHelper.Dbl2PosStrNoMiliseconds(Data?.Remaining ?? 0);
+    private float Progress => Math.Clamp(Data?.Progress ?? 0f, 0f, 100f);
+
+    private string? FrameSrc
+    {
+        get
+        {
+            var frame = Data?.Frame?.ToString();
+            if (string.IsNullOrEmpty(frame)) return null;
+            return frame.StartsWith("data:") ? frame : $"data:image/jpeg;base64,{frame}";
+        }
+    }
+}

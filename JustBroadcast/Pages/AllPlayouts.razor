@@ -1,0 +1,34 @@
+@page "/all-playouts"
+@using JustBroadcast.Models
+@using JustBroadcast.Services
+@using JustBroadcast.Shared.Playout
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IAuthService AuthService
+@inject ISignalRService SignalRService
+@inject NavigationManager Navigation
+
+<div class="all-playouts">
+    <div class="ap-topbar">
+        <h1>All Playouts</h1>
+        <span class="ap-count">@playouts.Count playouts · @ViewLabel</span>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container"><DxLoadingPanel Visible="true" Text="Loading playouts..." /></div>
+    }
+    else
+    {
+        <div class="ap-grid ap-grid-@GridColumns">
+            @foreach (var p in playouts)
+            {
+                <PlayoutTile PlayoutId="@p.Id"
+                             Name="@(p.Name ?? "Playout")"
+                             IsOnline="@IsOnline(p.Id)"
+                             Data="@LiveFor(p.Id)"
+                             OnSelect="SelectPlayout" />
+            }
+        </div>
+    }
+</div>

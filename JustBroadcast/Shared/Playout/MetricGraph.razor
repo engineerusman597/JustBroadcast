@@ -1,0 +1,109 @@
+@using DevExpress.Blazor
+@using System.Globalization
+@* One of the five configurable metric graphs. ChartType 0..6 selects source + color + label. *@
+
+<div class="metric-graph">
+    <div class="metric-head">
+        <span class="metric-title" style="color:@Color">@Label</span>
+        <span class="metric-current">@CurrentText</span>
+        <div class="metric-menu">
+            <button class="metric-menu-btn" @onclick="() => _menuOpen = !_menuOpen">…</button>
+            @if (_menuOpen)
+            {
+                <div class="metric-menu-list" @onmouseleave="() => _menuOpen = false">
+                    @for (int t = 0; t <= 6; t++)
+                    {
+                        var type = t;
+                        <div class="metric-menu-item @(ChartType == type ? "active" : "")"
+                             @onclick="() => SelectType(type)">
+                            @LabelFor(type)
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <DxChart Data="@_samples" Width="100%" Height="95px">
+        <DxChartLineSeries T="Sample" TArgument="int" TValue="double"
+                           ArgumentField="@(s => s.Index)"
+                           ValueField="@(s => s.Value)"
+                           Color="@System.Drawing.ColorTranslator.FromHtml(Color)">
+            <DxChartSeriesPoint Visible="false" />
+        </DxChartLineSeries>
+        <DxChartArgumentAxis Visible="false"><DxChartAxisLabel Visible="false" /><DxChartAxisGridLines Visible="false" /></DxChartArgumentAxis>
+        <DxChartValueAxis><DxChartAxisLabel /><DxChartAxisGridLines Visible="false" /></DxChartValueAxis>
+        <DxChartLegend Visible="false" />
+    </DxChart>
+</div>
+
+@code {
+    [Parameter] public int ChartType { get; set; }
+    [Parameter] public EventCallback<int> ChartTypeChanged { get; set; }
+
+    private bool _menuOpen;
+    private int _index;
+    private readonly List<Sample> _samples = new();
+    private string CurrentText = "—";
+
+    public class Sample { public int Index { get; set; } public double Value { get; set; } }
+
+    private string Color => ChartType switch
+    {
+        0 => "#5ecb16", 1 => "#0098df", 2 => "#f7db07", 3 => "#970fe1",
+        4 => "#02e1e8", 5 => "#ff7800", 6 => "#ff4081", _ => "#5ecb16"
+    };
+
+    private string Label => LabelFor(ChartType);
+
+    private static string LabelFor(int type) => type switch
+    {
+        0 => "FPS (AVG)",
+        1 => "JITTER (INPUT)",
+        2 => "INPUT FRAME TIME",
+        3 => "LIVE FPS (AVG)",
+        4 => "URL FPS (AVG)",
+        5 => "INPUT RECORDER FPS (AVG)",
+        6 => "OUTPUT RECORDER FPS (AVG)",
+        _ => ""
+    };
+
+    // Called by the parent on each PlaylistInfoMessageDto.
+    public void Push(PlaylistInfoMessageDto dto)
+    {
+        if (dto == null) return;
+
+        string? raw;
+        string suffix = "";
+        switch (ChartType)
+        {
+            case 0: raw = dto.AverageFps; CurrentText = dto.FPS ?? raw ?? "—"; break;
+            case 1: raw = dto.Jitter; suffix = " ms"; CurrentText = (dto.Jitter ?? "0") + suffix; break;
+            case 2: raw = dto.InputAvg; suffix = " ms"; CurrentText = (dto.InputAvg ?? "0") + suffix; break;
+            case 3: raw = dto.LiveFPS; CurrentText = dto.LiveFPS ?? "—"; break;
+            case 4: raw = dto.UrlFPS; CurrentText = dto.UrlFPS ?? "—"; break;
+            case 5: raw = dto.InputRecFPS; CurrentText = dto.InputRecFPS ?? "—"; break;
+            case 6: raw = dto.OutputRecFPS; CurrentText = dto.OutputRecFPS ?? "—"; break;
+            default: raw = null; break;
+        }
+
+        if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+        {
+            _samples.Add(new Sample { Index = _index++, Value = val });
+            if (_samples.Count > 60) _samples.RemoveAt(0);
+        }
+        StateHasChanged();
+    }
+
+    private async Task SelectType(int type)
+    {
+        _menuOpen = false;
+        if (type == ChartType) return;
+        ChartType = type;
+        _samples.Clear();
+        _index = 0;
+        CurrentText = "—";
+        if (ChartTypeChanged.HasDelegate)
+            await ChartTypeChanged.InvokeAsync(type);
+    }
+}

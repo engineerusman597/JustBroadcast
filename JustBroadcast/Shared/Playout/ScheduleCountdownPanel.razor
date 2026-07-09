@@ -1,0 +1,27 @@
+@using JustBroadcast.Services
+@* Reusable panel for Pushed Lists, Daily Lists, and Next Schedule Item. *@
+
+<div class="sched-panel">
+    <div class="sched-title">@Title</div>
+    <div class="sched-sub">@Subtitle</div>
+    <div class="sched-countdown">
+        <CountdownTimer Target="@(Item?.NextRun)" OnExpired="OnExpired" />
+    </div>
+    @if (ShowCount && Item != null)
+    {
+        <div class="sched-count">Items: @Item.TotalCount</div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public NextScheduleItemDto? Item { get; set; }
+    [Parameter] public bool ShowCount { get; set; } = true;
+    // When true this is the "Schedule Item" variant ("Next {type} In").
+    [Parameter] public bool IsScheduleItem { get; set; }
+    [Parameter] public EventCallback OnExpired { get; set; }
+
+    private string Subtitle => IsScheduleItem
+        ? (Item == null ? "No item" : $"Next {PlayoutHelper.GetScheduleItemName(Item.ItemType)} In")
+        : (Item == null ? "No list" : "Next list in");
+}

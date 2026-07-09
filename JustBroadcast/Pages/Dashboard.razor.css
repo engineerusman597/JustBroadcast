@@ -29,6 +29,24 @@
     min-height: 400px;
 }
 
+/* Loading panel styling */
+::deep .dxbl-loading-panel,
+::deep .loading-container .dxbl-loading-panel {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Loading panel text color */
+::deep .dxbl-loading-panel *:not(svg):not(circle):not(path):not(rect) {
+    color: #ffffff !important;
+}
+
+/* Spinner circle colors - keep default animation */
+::deep .loading-container svg circle {
+    stroke: #155dfc !important;
+}
+
 /* Stats Grid */
 .stats-grid {
     display: grid;
@@ -442,6 +460,9 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+    align-items: center;
+    text-align: center;
+    min-width: 80px;
 }
 
 .resource-label {
@@ -456,6 +477,7 @@
     font-size: 30px;
     font-weight: 600;
     line-height: 1;
+    width: 100%;
 }
 
 .cpu-chart {
@@ -471,11 +493,11 @@
 /* Chart Styling */
 ::deep .dxc-chart {
     background: transparent !important;
-    height: 120px;
+    height: 200px;
 }
 ::deep .system-resources-panel .dxc-chart {
     background: transparent !important;
-    height: 100px;
+    height: 200px;
 }
 
 ::deep .dxbl-widget-container.dx-visibility-change-handler {
@@ -750,6 +772,28 @@
     display: flex;
     flex-direction: column;
     gap: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Custom scrollbar for errors list */
+.errors-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.errors-list::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.errors-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.errors-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
 }
 
 .error-item-new {
@@ -851,6 +895,10 @@
 
 .error-item-new.error-warning .error-badge {
     background: #a65f00;
+}
+
+.error-item-new.error-info .error-badge {
+    background: #155dfc;
 }
 
 /* Responsive */

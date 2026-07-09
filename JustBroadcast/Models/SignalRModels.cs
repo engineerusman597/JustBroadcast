@@ -25,7 +25,9 @@ namespace JustBroadcast.Models
     {
         RequestStatusSync,
         ClientStatusChanged,
-        Metrics
+        Metrics,
+        PlayoutStatus,
+        StartStopOutput
     }
 
     public enum ClientType

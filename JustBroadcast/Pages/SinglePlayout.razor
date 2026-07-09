@@ -1,0 +1,113 @@
+@page "/playout/{Id}"
+@using JustBroadcast.Models
+@using JustBroadcast.Services
+@using JustBroadcast.Shared.Playout
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IPlayoutApiService PlayoutApi
+@inject IPlayoutSettingsService Settings
+@inject ISignalRService SignalRService
+@inject NavigationManager Navigation
+
+<div class="sp2">
+    <!-- Title bar -->
+    <div class="sp2-titlebar">
+        <h1 class="sp2-title">@PlayoutName</h1>
+        <div class="sp2-titleright">
+            <span class="sp2-live @(IsOnline ? "on" : "off")">
+                @(IsOnline ? "LIVE" : "OFFLINE") · last update @lastUpdate
+            </span>
+            <span class="sp2-clock">@DateTime.Now.ToString("HH:mm:ss")</span>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="loading-container"><DxLoadingPanel Visible="true" Text="Loading playout..." /></div>
+    }
+    else
+    {
+        <!-- Row 1: Now Playing | Outputs | Health -->
+        <div class="sp2-row sp2-row1">
+            <section class="card card-nowplaying">
+                <header class="card-h">
+                    <span>NOW PLAYING</span>
+                    <span class="np2-status @(Playing ? "on" : "stop")">@(Playing ? "ON AIR" : "STOPPED")</span>
+                </header>
+                <NowPlayingCard Data="@live" />
+            </section>
+
+            <section class="card card-outputs">
+                <header class="card-h"><span>OUTPUTS</span></header>
+                <OutputsGrid Outputs="@outputs" Messages="@live?.Outputs"
+                             PlayoutId="@Id" OnStartStopOutput="StartStopOutput" />
+            </section>
+
+            <section class="card card-health">
+                <header class="card-h"><span>HEALTH SUMMARY</span></header>
+                <HealthSummary Data="@live" />
+            </section>
+        </div>
+
+        <!-- Row 2: six stat panels -->
+        <div class="sp2-row sp2-row2">
+            <StatPanel Icon="cloud-arrow-up" Title="PUSHED LISTS" Value="@(pushedList?.TotalCount.ToString() ?? "0")"
+                       Sub="Next In" SubValue="@PushedCountdown" />
+            <StatPanel Icon="calendar-day" Title="DAILY LISTS" Value="@(dailyList?.TotalCount.ToString() ?? "0")"
+                       Sub="Next In" SubValue="@DailyCountdown" />
+            <StatPanel Icon="calendar-check" Title="SCHEDULE ITEMS" Value="@(nextItem?.TotalCount.ToString() ?? "0")"
+                       Sub="@NextItemLabel" SubValue="@NextItemCountdown" />
+            <section class="card card-stat">
+                <header class="card-h"><span>CURRENT PLAYLIST</span></header>
+                <div class="playlist2">
+                    <div><span>Items</span><strong>@(live?.PlaylistCount ?? "0")</strong></div>
+                    <div><span>Remaining</span><strong>@(live?.PlaylistRemaining ?? "0")</strong></div>
+                    <div><span>Duration</span><strong>@(live?.PlaylistDuration ?? "00:00:00")</strong></div>
+                </div>
+            </section>
+            <section class="card card-stat">
+                <header class="card-h"><span>PLAYLIST COUNTDOWN</span></header>
+                <div class="stat-big-row">
+                    <i class="fas fa-clock stat-icon"></i>
+                    <span class="stat-big">@PlayoutHelper.Dbl2PosStrNoMiliseconds(live?.Countdown ?? 0)</span>
+                </div>
+            </section>
+            <section class="card card-stat">
+                <header class="card-h">
+                    <span>@(scte35Selected ? "SCTE 35 MARKERS" : "SCTE 104 MARKERS")</span>
+                    <button class="dots-btn" @onclick="ToggleScte">…</button>
+                </header>
+                <div class="stat-big-row">
+                    <i class="far fa-dot-circle stat-icon"></i>
+                    <span class="stat-big">@(scte35Selected ? (live?.Scte35 ?? 0) : (live?.Scte104 ?? 0))</span>
+                </div>
+            </section>
+        </div>
+
+        <!-- Row 3: five metric graphs -->
+        <div class="sp2-row sp2-row3">
+            @for (int slot = 0; slot < 5; slot++)
+            {
+                var s = slot;
+                <MetricGraph @ref="graphRefs[s]"
+                             ChartType="graphTypes[s]"
+                             ChartTypeChanged="(t) => OnGraphTypeChanged(s, t)" />
+            }
+        </div>
+
+        <!-- Row 4: Graphics | Event Logs | Error Frequency | Errors -->
+        <div class="sp2-row sp2-row4">
+            <section class="card card-graphics">
+                <header class="card-h"><span>GRAPHICS (ON AIR)</span><span class="card-h-right">Total: @graphicsCount</span></header>
+                <div class="graphics-empty">No graphics on air</div>
+            </section>
+
+            <section class="card card-eventlog">
+                <header class="card-h"><span>EVENT LOGS (Last 20)</span></header>
+                <EventLogPanel Logs="@eventLogs" Embedded="true" />
+            </section>
+
+            <SinglePlayoutErrors Errors="@errors" />
+        </div>
+    }
+</div>

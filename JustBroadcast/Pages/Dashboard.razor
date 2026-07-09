@@ -216,7 +216,7 @@
                     <div class="cpu-chart">
                         <DxChart Data="@dashboardData.SystemResources.CpuHistory"
                                  Width="100%"
-                                 Height="200px"
+                                 Height="360px"
                                  LabelOverlap="ChartLabelOverlap.Hide">
                             <DxChartAreaSeries Name="CPU Usage"
                                                T="CpuDataPoint"
@@ -255,7 +255,7 @@
             <div class="panel-header">
                 <h2>Error Frequency (last 7 days)</h2>
             </div>
-            <DxChart Data="@errorFrequencyData" Width="100%">
+            <DxChart Data="@errorFrequencyData" Width="100%" Height="420px">
                 <DxChartBarSeries ArgumentField="@((ErrorFrequencyItem v) => v.Day)"
                                   ValueField="@((ErrorFrequencyItem v) => v.Count)"
                                   Name="Errors">

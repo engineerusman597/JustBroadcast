@@ -1,0 +1,52 @@
+@using JustBroadcast.Services
+@* Event Log: Time | LogType icon | Description | ItemType name. Embedded skips the card chrome. *@
+
+@if (Embedded)
+{
+    @Body
+}
+else
+{
+    <div class="eventlog-panel">
+        <div class="panel-header"><h2>Event Log</h2></div>
+        @Body
+    </div>
+}
+
+@code {
+    [Parameter] public List<EventlogDto>? Logs { get; set; }
+    [Parameter] public bool Embedded { get; set; }
+
+    private RenderFragment Body => __builder =>
+    {
+        <div class="eventlog2">
+            @if (Logs == null || Logs.Count == 0)
+            {
+                <div class="eventlog2-empty">No events</div>
+            }
+            else
+            {
+                @foreach (var log in Logs)
+                {
+                    <div class="eventlog2-row">
+                        <span class="el2-time">@(log.Time?.ToString("dd.MM.yyyy HH:mm:ss") ?? "")</span>
+                        <span class="el2-icon"><i class="fas @LogIcon(log.LogType)" style="color:@LogColor(log.LogType)"></i></span>
+                        <span class="el2-desc">@log.Description</span>
+                        <span class="el2-item">@PlayoutHelper.GetEventLogItemTypeName(log.ItemType)</span>
+                    </div>
+                }
+            }
+        </div>
+    };
+
+    private static string LogIcon(int? logType) => logType switch
+    {
+        0 => "fa-info-circle", 1 => "fa-check-circle", 2 => "fa-exclamation-triangle", 3 => "fa-times-circle",
+        _ => "fa-circle"
+    };
+
+    private static string LogColor(int? logType) => logType switch
+    {
+        0 => "#2d79f7", 1 => "#5ecb16", 2 => "#ffb115", 3 => "#d11c1c", _ => "#90a1b9"
+    };
+}

@@ -1,0 +1,46 @@
+@using JustBroadcast.Services
+@* Popover shown when an output's FPS is clicked: stream detail + Start/Stop. *@
+
+<div class="fps-popover" @onclick:stopPropagation="true">
+    <div class="fps-pop-header">
+        <span class="fps-pop-title">@(Output?.OutputName ?? "Output")</span>
+        <span class="health-dot" style="background:@HealthColor"></span>
+        <button class="fps-pop-close" @onclick="OnClose">&times;</button>
+    </div>
+
+    <div class="fps-pop-cards">
+        <div class="fps-pop-card"><span>Video</span><strong>@(Output?.VideoFormatName ?? "—")</strong></div>
+        <div class="fps-pop-card"><span>Audio</span><strong>@(Output?.AudioFormatName ?? "—")</strong></div>
+        <div class="fps-pop-card"><span>Source</span><strong>@Source</strong></div>
+    </div>
+
+    <div class="fps-pop-cards">
+        <div class="fps-pop-card"><span>FPS</span><strong>@Fps</strong></div>
+        <div class="fps-pop-card"><span>Jitter</span><strong>@(Message?.Jitter ?? "0.00")</strong></div>
+        <div class="fps-pop-card"><span>TC Break</span><strong>@(Message?.TcBreaks ?? "0")</strong></div>
+        <div class="fps-pop-card"><span>Reset</span><strong>@(Message?.Resets ?? 0)</strong></div>
+    </div>
+
+    <button class="fps-pop-btn @(IsStarted ? "btn-stop" : "btn-start")" @onclick="ToggleStartStop">
+        @(IsStarted ? "STOP OUTPUT" : "START OUTPUT")
+    </button>
+</div>
+
+@code {
+    [Parameter] public PlayoutoutputShortDto? Output { get; set; }
+    [Parameter] public OutputInfoMessageDto? Message { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<bool> OnStartStop { get; set; } // arg = desired IsStarted
+
+    private bool IsStarted => Message?.IsStarted ?? false;
+    private string Fps => PlayoutHelper.FormatFps(Message?.FPS);
+    private string Source => PlayoutHelper.SetDeviceOrUrl(Output);
+    private string HealthColor => PlayoutHelper.HealthDisplay(Message?.HealthStatus ?? HealthStatus.Unknown).Color;
+
+    private async Task ToggleStartStop()
+    {
+        // If started, send false to stop it (and vice versa).
+        if (OnStartStop.HasDelegate)
+            await OnStartStop.InvokeAsync(!IsStarted);
+    }
+}

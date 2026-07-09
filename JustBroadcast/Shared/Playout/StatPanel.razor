@@ -1,0 +1,23 @@
+@* Small icon + big-number stat panel with a sub label/value (row-2 widgets). *@
+
+<section class="card card-stat">
+    <header class="card-h">
+        <span>@Title</span>
+    </header>
+    <div class="stat-body">
+        <div class="stat-icon-circle"><i class="fas fa-@Icon"></i></div>
+        <span class="stat-big">@Value</span>
+        <div class="stat-sub">
+            <span class="stat-sub-label">@Sub</span>
+            <span class="stat-sub-value">@SubValue</span>
+        </div>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "circle";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "0";
+    [Parameter] public string Sub { get; set; } = "";
+    [Parameter] public string SubValue { get; set; } = "";
+}

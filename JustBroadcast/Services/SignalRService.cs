@@ -42,6 +42,7 @@ namespace JustBroadcast.Services
                 .WithUrl(hubUrlWithToken, options =>
                 {
                     // Set the access token for authentication
+                    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
                     options.AccessTokenProvider = () => Task.FromResult(accessToken)!;
 
                     Console.WriteLine($"[SignalRService] JWT configured in AccessTokenProvider and query string");
@@ -187,6 +188,20 @@ namespace JustBroadcast.Services
                 Console.WriteLine($"[SignalRService] Stack trace: {ex.StackTrace}");
                 throw;
             }
+        }
+
+        public async Task SendStartStopOutputAsync(StartStopOuputDto dto)
+        {
+            // No targeted hub method available; broadcast with the target playout id
+            // in the payload so the owning playout can filter on clientId/playoutId.
+            var command = new CommandDto
+            {
+                command = ServiceMessages.StartStopOutput.ToString(),
+                clientId = dto.PlayoutId ?? string.Empty,
+                playoutId = dto.PlayoutId ?? string.Empty,
+                data = dto
+            };
+            await SendCommand(command);
         }
 
         public async Task<IReadOnlyCollection<ClientSession>> GetClientsSnapshot()

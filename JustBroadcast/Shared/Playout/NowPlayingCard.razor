@@ -24,7 +24,7 @@
     <div class="np2-name">@ItemName</div>
     <div class="np2-started">Started: @StartTime</div>
 
-    <div class="np2-progress"><div class="np2-progress-fill" style="width:@(Progress)%"></div></div>
+    <div class="np2-progress"><div class="np2-progress-fill" style="width:@ProgressCss"></div></div>
 
     <div class="np2-times">
         <div class="np2-time-col">
@@ -45,7 +45,30 @@
     private string StartTime => Data?.StartTime ?? "00:00:00";
     private string OnAir => PlayoutHelper.Dbl2PosStrNoMiliseconds(Data?.FileTime ?? 0);
     private string Remaining => PlayoutHelper.Dbl2PosStrNoMiliseconds(Data?.Remaining ?? 0);
-    private float Progress => Math.Clamp(Data?.Progress ?? 0f, 0f, 100f);
+    // Elapsed / (elapsed + remaining) is derived from FileTime and Remaining, which are
+    // reliable. The DTO's Progress field is only used when those aren't available, and
+    // its scale is normalised (it may arrive as 0..1, 0..10 or 0..100).
+    private float Progress
+    {
+        get
+        {
+            var elapsed = Data?.FileTime ?? 0d;
+            var remaining = Data?.Remaining ?? 0d;
+            var total = elapsed + remaining;
+            if (total > 0d)
+                return (float)Math.Clamp(elapsed / total * 100d, 0d, 100d);
+
+            var raw = Data?.Progress ?? 0f;
+            if (raw <= 1f) raw *= 100f;        // 0..1 fraction
+            else if (raw <= 10f) raw *= 10f;   // 0..10 scale
+            return Math.Clamp(raw, 0f, 100f);
+        }
+    }
+
+    // Always emit an invariant decimal separator; "40,8%" is invalid CSS and
+    // would silently collapse the bar to zero width under a comma-decimal locale.
+    private string ProgressCss =>
+        Progress.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
 
     private string? FrameSrc
     {

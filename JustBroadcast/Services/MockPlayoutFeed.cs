@@ -54,8 +54,10 @@ namespace JustBroadcast.Services
         private PlaylistInfoMessageDto Build(string id, int index)
         {
             double t = _phase + index;
-            int vuL = (int)(50 + 45 * Math.Abs(Math.Sin(t)));
-            int vuR = (int)(50 + 45 * Math.Abs(Math.Sin(t + 0.7)));
+            // Audio levels are 0..600 (see VuMeter); keep them in a realistic
+            // programme range so the meter sits around the green/yellow bands.
+            int vuL = (int)(360 + 210 * Math.Abs(Math.Sin(t)));
+            int vuR = (int)(360 + 210 * Math.Abs(Math.Sin(t + 0.7)));
             double avgFps = 49.7 + Math.Sin(t) * 0.4;
             double progress = (DateTime.Now.Second / 60.0) * 100.0;
             double fileTime = DateTime.Now.Second + DateTime.Now.Minute * 60;

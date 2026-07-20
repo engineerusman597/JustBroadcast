@@ -130,10 +130,19 @@ namespace JustBroadcast.Pages
                     }
                 }
             }
+            else if (command.command == ServiceMessages.PlayoutStatus.ToString())
+            {
+                PlayoutPlayingChanged(command);
+            }
             else if (command.command == ServiceMessages.Metrics.ToString())
             {
                 Console.WriteLine($"[SignalR] Processing Metrics command");
                 SystemMetricsReceived(command);
+            }
+            else if (command.command == ServiceMessages.HeartBeat.ToString() ||
+                     command.command == ServiceMessages.RequestStatusSync.ToString())
+            {
+                // Keep-alive / sync echo from the hub; nothing for the dashboard to do.
             }
             else
             {
@@ -145,21 +154,57 @@ namespace JustBroadcast.Pages
         {
             if (dashboardData?.ActivePlayouts == null) return;
 
-            // Find the playout by clientId and update its status
+            // Find the playout by clientId and update its status.
             var playout = dashboardData.ActivePlayouts.FirstOrDefault(p => p.Id == command.clientId);
             if (playout != null)
             {
-                // Update status from command data
-                // For now, set to ON AIR when we receive status
-                playout.IsOnline = 1;
-                playout.Status = "online";
+                // data is "1" when the playout server connects, "0" when it drops.
+                var online = command.data?.ToString() == "1";
 
-                // Also update playing status (when online, it's playing; when offline, it's stopped)
-                playout.IsPlaying = 1;
-                playout.Playing = "playing";
+                playout.IsOnline = online ? 1 : 0;
+                playout.Status = online ? "online" : "offline";
+
+                // Connecting to the hub only means the server is reachable, not that it is
+                // playing out; PlayoutStatus carries the real transport state.
+                if (!online)
+                {
+                    playout.IsPlaying = 0;
+                    playout.Playing = "stopped";
+                }
 
                 UpdatePlayoutStats();
                 InvokeAsync(StateHasChanged);
+            }
+        }
+
+        // Real transport state for a playout comes from PlayoutStatus, not from the
+        // client merely connecting to the hub.
+        private void PlayoutPlayingChanged(CommandDto command)
+        {
+            if (dashboardData?.ActivePlayouts == null || command.data == null) return;
+
+            try
+            {
+                var json = command.data is string s ? s : System.Text.Json.JsonSerializer.Serialize(command.data);
+                var dto = System.Text.Json.JsonSerializer.Deserialize<PlaylistInfoMessageDto>(
+                    json, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (dto == null) return;
+
+                var id = !string.IsNullOrEmpty(dto.PlayoutId) ? dto.PlayoutId! : command.clientId;
+                var playout = dashboardData.ActivePlayouts.FirstOrDefault(p => p.Id == id);
+                if (playout == null) return;
+
+                playout.IsOnline = 1;
+                playout.Status = "online";
+                playout.IsPlaying = dto.IsPlaying ? 1 : 0;
+                playout.Playing = dto.IsPlaying ? "playing" : "stopped";
+
+                UpdatePlayoutStats();
+                InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SignalR] PlayoutStatus parse failed: {ex.Message}");
             }
         }
 

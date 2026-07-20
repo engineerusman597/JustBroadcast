@@ -135,8 +135,6 @@ namespace JustBroadcast.Pages
         {
             if (command.command == ServiceMessages.PlayoutStatus.ToString())
             {
-                // Only the active (selected) playout's messages matter here.
-                if (command.clientId != Id) return;
                 if (command.data == null) return;
 
                 try
@@ -144,8 +142,15 @@ namespace JustBroadcast.Pages
                     var json = command.data is string s ? s : JsonSerializer.Serialize(command.data);
                     var dto = JsonSerializer.Deserialize<PlaylistInfoMessageDto>(
                         json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    if (dto != null)
-                        InvokeAsync(() => ApplyLive(dto));
+                    if (dto == null) return;
+
+                    // The message belongs to this page if either the envelope's clientId
+                    // or the payload's PlayoutId matches the selected playout.
+                    var isMine = command.clientId == Id || dto.PlayoutId == Id;
+                    Console.WriteLine($"[SinglePlayout] PlayoutStatus recv - clientId='{command.clientId}' dto.PlayoutId='{dto.PlayoutId}' pageId='{Id}' -> {(isMine ? "ACCEPTED" : "ignored")}");
+                    if (!isMine) return;
+
+                    InvokeAsync(() => ApplyLive(dto));
                 }
                 catch (Exception ex)
                 {
@@ -154,9 +159,10 @@ namespace JustBroadcast.Pages
             }
             else if (command.command == ServiceMessages.ClientStatusChanged.ToString())
             {
-                if (command.clientId == Id)
+                if (command.clientId == Id || command.playoutId == Id)
                 {
                     IsOnline = command.data?.ToString() == "1";
+                    Console.WriteLine($"[SinglePlayout] ClientStatusChanged for {Id} -> online={IsOnline}");
                     InvokeAsync(StateHasChanged);
                 }
             }

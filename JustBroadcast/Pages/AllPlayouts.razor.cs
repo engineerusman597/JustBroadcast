@@ -12,6 +12,9 @@ namespace JustBroadcast.Pages
         private bool isLoading = true;
         private List<PlayoutListDto> playouts = new();
         private readonly Dictionary<string, PlaylistInfoMessageDto> _live = new();
+
+        // SignalR is the only source of live online state; Playouts/short returns
+        // stale DB columns, not current status.
         private readonly HashSet<string> _online = new();
 
         protected override void OnInitialized()
@@ -68,6 +71,7 @@ namespace JustBroadcast.Pages
 
         private bool IsOnline(string id) => _online.Contains(id);
 
+
         private PlaylistInfoMessageDto? LiveFor(string id) =>
             _live.TryGetValue(id, out var d) ? d : null;
 
@@ -83,7 +87,9 @@ namespace JustBroadcast.Pages
                         json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     if (dto != null)
                     {
-                        var id = command.clientId;
+                        // Prefer the id carried in the payload; fall back to the envelope's clientId.
+                        var id = !string.IsNullOrEmpty(dto.PlayoutId) ? dto.PlayoutId! : command.clientId;
+                        Console.WriteLine($"[AllPlayouts] PlayoutStatus recv - clientId='{command.clientId}' dto.PlayoutId='{dto.PlayoutId}' -> key '{id}' | known tiles: {string.Join(",", playouts.Select(p => p.Id))}");
                         InvokeAsync(() =>
                         {
                             _live[id] = dto;
@@ -99,12 +105,16 @@ namespace JustBroadcast.Pages
             }
             else if (command.command == ServiceMessages.ClientStatusChanged.ToString())
             {
+                // Only playout servers drive tile online state (other groups are users).
+                if (command.group != ClientType.PlayoutServer.ToString()) return;
+
                 var id = command.clientId;
                 var online = command.data?.ToString() == "1";
+                Console.WriteLine($"[AllPlayouts] ClientStatusChanged - playout '{id}' online={online}");
                 InvokeAsync(() =>
                 {
                     if (online) _online.Add(id);
-                    else _online.Remove(id);
+                    else { _online.Remove(id); _live.Remove(id); }
                     StateHasChanged();
                 });
             }

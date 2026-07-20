@@ -1,12 +1,15 @@
-@* Two-channel VU meter fed by PlaylistInfoMessageDto.Audio (int[2]). *@
+@* Two-channel VU meter fed by PlaylistInfoMessageDto.Audio (int[2]).
+   Values are 0..600, mapped to -60..0 dB, then to a non-linear bar position
+   (bottom 25% covers -60..-30 dB, upper 75% covers -30..0 dB) to match the
+   desktop MStereoVuMeter control. *@
 
 <div class="vu-meter">
     @for (int ch = 0; ch < 2; ch++)
     {
-        var level = GetLevel(ch);
+        var pct = PositionPercent(ch);
         <div class="vu-channel">
             <div class="vu-track">
-                <div class="vu-fill @LevelClass(level)" style="height:@(level)%"></div>
+                <div class="vu-fill" style="height:@(pct.ToString("0.#", Inv))%"></div>
             </div>
             <div class="vu-label">@(ch == 0 ? "L" : "R")</div>
         </div>
@@ -16,13 +19,36 @@
 @code {
     [Parameter] public int[]? Audio { get; set; }
 
-    // Audio values are treated as 0..100 percentage of full scale.
-    private int GetLevel(int ch)
+    private static readonly System.Globalization.CultureInfo Inv =
+        System.Globalization.CultureInfo.InvariantCulture;
+
+    public const int MinValue = 0;
+    public const int MaxValue = 600;
+
+    private int RawValue(int ch)
     {
-        if (Audio == null || Audio.Length <= ch) return 0;
-        return Math.Clamp(Audio[ch], 0, 100);
+        if (Audio == null || Audio.Length <= ch) return MinValue;
+        return Math.Clamp(Audio[ch], MinValue, MaxValue);
     }
 
-    private string LevelClass(int level) =>
-        level >= 90 ? "vu-hot" : level >= 70 ? "vu-warm" : "vu-ok";
+    // 0..600 -> -60..0 dB
+    private static float MapLevelToDb(int value)
+    {
+        value = Math.Clamp(value, MinValue, MaxValue);
+        return -60f + (value / (float)MaxValue) * 60f;
+    }
+
+    // dB -> 0..1 bar position (non-linear, matches Level2Pos in the desktop control).
+    private static float Level2Pos(float level)
+    {
+        if (level < -30f)
+        {
+            level = level > -60f ? level : -60f;
+            return 0.25f * (level + 60f) / 30f;
+        }
+        level = level > 0f ? 0f : level;
+        return 0.25f + 0.75f * (level + 30f) / 30f;
+    }
+
+    private float PositionPercent(int ch) => Level2Pos(MapLevelToDb(RawValue(ch))) * 100f;
 }

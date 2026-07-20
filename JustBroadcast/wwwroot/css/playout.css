@@ -108,13 +108,40 @@
 .np-progress-fill { height: 100%; background: var(--pl-green); transition: width .3s; }
 
 /* ---------- VU meter ---------- */
+/* VU meter — colour bands match the desktop MStereoVuMeter thresholds.
+   Stops are the non-linear bar positions of each dB limit:
+   -30dB=25%, -20dB=50%, -12dB=70%, -5dB=87.5%. The gradient is painted over
+   the full track height so the bands stay fixed as the level moves. */
 .vu-meter { display: flex; gap: 3px; height: 100%; }
-.vu-channel { display: flex; flex-direction: column; align-items: center; flex: 1; }
-.vu-track { flex: 1; width: 100%; background: rgba(255,255,255,.08); border-radius: 3px; display: flex; align-items: flex-end; overflow: hidden; }
-.vu-fill { width: 100%; transition: height .1s linear; }
-.vu-ok { background: var(--pl-green); }
-.vu-warm { background: var(--pl-warn); }
-.vu-hot { background: var(--pl-crit); }
+.vu-channel { display: flex; flex-direction: column; align-items: center; flex: 1; min-height: 0; }
+.vu-track {
+    position: relative; flex: 1; width: 100%; min-height: 0;
+    background: rgb(17, 20, 26); border-radius: 3px; overflow: hidden;
+}
+/* The colour bands live on the track (full height, so they never shift);
+   the fill simply clips them from the top down to the current level. */
+.vu-track::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to top,
+        rgb(59, 111, 165) 0%,
+        rgb(59, 111, 165) 50%,
+        rgb(39, 224, 123) 50%,
+        rgb(39, 224, 123) 70%,
+        rgb(255, 210, 74) 70%,
+        rgb(255, 210, 74) 87.5%,
+        rgb(255, 90, 90) 87.5%,
+        rgb(255, 90, 90) 100%);
+}
+/* Mask over the un-lit portion above the current level. */
+.vu-fill {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: transparent;
+    transition: height .08s linear;
+}
+.vu-fill::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 100%;
+    height: 100vh; background: rgb(17, 20, 26);
+}
 .vu-label { font-size: .6rem; color: var(--pl-muted); margin-top: 2px; }
 
 /* ---------- Health summary ---------- */
@@ -228,6 +255,20 @@
     min-height: 100vh;
 }
 
+/* centered loader */
+.sp2-loader {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1rem; min-height: 60vh; width: 100%; color: var(--c-muted);
+}
+.sp2-spinner {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 3px solid rgba(255,255,255,.12);
+    border-top-color: var(--c-cyan);
+    animation: sp2-spin .8s linear infinite;
+}
+.sp2-loader-text { font-size: .9rem; letter-spacing: .3px; }
+@keyframes sp2-spin { to { transform: rotate(360deg); } }
+
 /* title bar */
 .sp2-titlebar { display: flex; align-items: center; margin-bottom: 1rem; }
 .sp2-title { font-size: 1.35rem; font-weight: 700; margin: 0; letter-spacing: .3px; }
@@ -283,8 +324,16 @@
 .np2-db { display: flex; flex-direction: column; justify-content: space-between; font-size: .55rem; color: var(--c-muted); padding: 2px 0; }
 .np2-name { margin-top: .6rem; font-weight: 700; font-size: .95rem; }
 .np2-started { color: var(--c-muted); font-size: .75rem; margin-top: .1rem; }
-.np2-progress { height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; margin: .5rem 0; }
-.np2-progress-fill { height: 100%; background: var(--c-green); transition: width .3s; }
+.np2-progress {
+    position: relative; height: 8px; border-radius: 4px; overflow: hidden;
+    margin: .6rem 0; background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.08);
+}
+.np2-progress-fill {
+    height: 100%; background: var(--c-blue); border-radius: 4px;
+    transition: width .3s; min-width: 2px;
+    box-shadow: 0 0 6px rgba(45, 121, 247, .5);
+}
 .np2-times { display: flex; justify-content: space-between; }
 .np2-time-col { display: flex; flex-direction: column; }
 .np2-time-right { align-items: flex-end; }
@@ -293,7 +342,7 @@
 
 /* VU meter tuned for the dB column */
 .sp2 .vu-meter { gap: 3px; }
-.sp2 .vu-track { background: rgba(255,255,255,.06); border-radius: 2px; }
+.sp2 .vu-track { border-radius: 2px; }
 .sp2 .vu-label { display: none; }
 
 /* ---- OUTPUTS ---- */
@@ -358,14 +407,16 @@
 .sp2-row3 .metric-title { color: var(--c-muted); }
 .sp2-row3 .metric-current { font-size: 1.25rem; }
 /* Contain every DevExpress chart inside sp2 so its SVG can't overflow the card.
-   DxChart renders <div class="dxbl-chart"><svg>…; force both to the box height. */
-.sp2 .dxbl-chart { width: 100% !important; min-height: 0 !important; overflow: hidden; }
-.sp2 .dxbl-chart > div,
-.sp2 .dxbl-chart .dxbl-chart-container { height: 100% !important; min-height: 0 !important; }
-.sp2 .dxbl-chart svg { height: 100% !important; max-height: 100%; }
+   Real DX classes: .dxc-chart is the chart; the widget container needs min-height cleared. */
+.sp2 .dxbl-widget-container.dx-visibility-change-handler { min-height: auto !important; }
+.sp2 .dxc-chart { background: transparent !important; width: 100% !important; }
+.sp2 .dxc-chart svg { background: transparent !important; }
+.sp2 .dxc-chart .dxc-val-axis text,
+.sp2 .dxc-chart .dxc-arg-axis text { fill: var(--c-muted) !important; font-size: 10px !important; }
+.sp2 .dxc-chart .dxc-grid-line { stroke: #1e2539 !important; stroke-width: 1px !important; }
 
 /* cap the chart area so row-3 tiles stay short */
-.sp2-row3 .metric-graph .dxbl-chart { height: 95px !important; max-height: 95px; flex: none; }
+.sp2-row3 .metric-graph .dxc-chart { height: 95px !important; }
 
 /* ---- ROW 4 ---- */
 .sp2-row4 { align-items: start; }
@@ -382,7 +433,7 @@
 .eventlog2-empty { padding: 1rem; text-align: center; color: var(--c-muted); }
 
 .card-errfreq { display: flex; flex-direction: column; }
-.card-errfreq .dxbl-chart { height: 130px !important; max-height: 130px; flex: none; }
+.card-errfreq .dxc-chart { height: 130px !important; }
 .errfreq-footer { margin-top: auto; padding-top: .4rem; }
 .errfreq-actions-label { font-size: .6rem; color: var(--c-muted); letter-spacing: .5px; }
 .errfreq-actions { font-size: .78rem; color: var(--c-text); }

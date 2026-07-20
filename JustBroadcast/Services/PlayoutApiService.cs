@@ -17,6 +17,9 @@ namespace JustBroadcast.Services
         private string BaseUrl => configuration["ApiSettings:BaseUrl"] ?? "http://178.222.112.105:5016";
         private bool UseMock => Convert.ToBoolean(configuration["ApiSettings:UseMockPlayoutData"]);
 
+        public Task<List<PlayoutListInfo>> GetPlayoutsShortAsync() =>
+            GetListAsync<PlayoutListInfo>(configuration["ApiSettings:PlayoutsEndpoint"] ?? "/api/Playouts/short");
+
         public Task<List<ErrorListDto>> GetErrorsLastWeekAsync(string playoutId) =>
             UseMock ? Task.FromResult(MockPlayoutData.Errors(playoutId))
                     : GetListAsync<ErrorListDto>($"/api/Errors/lastweek/playout/{playoutId}");

@@ -4,6 +4,8 @@ namespace JustBroadcast.Services
 {
     public interface IPlayoutApiService
     {
+        // Playout list incl. server-reported IsOnline / IsPlaying state.
+        Task<List<PlayoutListInfo>> GetPlayoutsShortAsync();
         Task<List<ErrorListDto>> GetErrorsLastWeekAsync(string playoutId);
         Task<List<PlayoutoutputShortDto>> GetOutputsAsync(string playoutId);
         Task<NextScheduleItemDto?> GetNextPushedListAsync(string channelId);

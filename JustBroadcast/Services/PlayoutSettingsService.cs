@@ -6,6 +6,7 @@ namespace JustBroadcast.Services
     {
         private static string ScteKey(string playoutId) => $"playout:{playoutId}:scte35";
         private static string GraphKey(string playoutId, int slot) => $"playout:{playoutId}:graph:{slot}";
+        private static string MetricKey(string playoutId, int slot) => $"playout:{playoutId}:metric:{slot}";
 
         public async Task<bool> GetScte35SelectedAsync(string playoutId)
         {
@@ -56,6 +57,32 @@ namespace JustBroadcast.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[PlayoutSettings] write graph failed: {ex.Message}");
+            }
+        }
+
+        public async Task<int> GetMetricTypeAsync(string playoutId, int slot)
+        {
+            try
+            {
+                if (await localStorage.ContainKeyAsync(MetricKey(playoutId, slot)))
+                    return await localStorage.GetItemAsync<int>(MetricKey(playoutId, slot));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PlayoutSettings] read metric failed: {ex.Message}");
+            }
+            return slot; // defaults: slot 0->0, 1->1, 2->2, 3->3, 4->4
+        }
+
+        public async Task SetMetricTypeAsync(string playoutId, int slot, int metricType)
+        {
+            try
+            {
+                await localStorage.SetItemAsync(MetricKey(playoutId, slot), metricType);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PlayoutSettings] write metric failed: {ex.Message}");
             }
         }
     }

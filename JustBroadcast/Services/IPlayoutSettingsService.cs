@@ -10,5 +10,11 @@ namespace JustBroadcast.Services
         // Graph slot 0..4 -> chart type 0..6. Defaults: 0,1,2,3,4.
         Task<int> GetGraphTypeAsync(string playoutId, int slot);
         Task SetGraphTypeAsync(string playoutId, int slot, int chartType);
+
+        // Numeric metric slot 0..4 in the N-up tiles -> metric type 0..6.
+        // Stored separately from the graph slots so the two views don't overwrite
+        // each other. Defaults: 0,1,2,3,4.
+        Task<int> GetMetricTypeAsync(string playoutId, int slot);
+        Task SetMetricTypeAsync(string playoutId, int slot, int metricType);
     }
 }

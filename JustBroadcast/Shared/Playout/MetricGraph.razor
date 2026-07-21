@@ -11,7 +11,7 @@
             @if (_menuOpen)
             {
                 <div class="metric-menu-list" @onmouseleave="() => _menuOpen = false">
-                    @for (int t = 0; t <= 6; t++)
+                    @for (int t = 0; t < MetricTypes.Count; t++)
                     {
                         var type = t;
                         <div class="metric-menu-item @(ChartType == type ? "active" : "")"
@@ -48,46 +48,20 @@
 
     public class Sample { public int Index { get; set; } public double Value { get; set; } }
 
-    private string Color => ChartType switch
-    {
-        0 => "#5ecb16", 1 => "#0098df", 2 => "#f7db07", 3 => "#970fe1",
-        4 => "#02e1e8", 5 => "#ff7800", 6 => "#ff4081", _ => "#5ecb16"
-    };
+    private string Color => MetricTypes.Color(ChartType);
 
     private string Label => LabelFor(ChartType);
 
-    private static string LabelFor(int type) => type switch
-    {
-        0 => "FPS (AVG)",
-        1 => "JITTER (INPUT)",
-        2 => "INPUT FRAME TIME",
-        3 => "LIVE FPS (AVG)",
-        4 => "URL FPS (AVG)",
-        5 => "INPUT RECORDER FPS (AVG)",
-        6 => "OUTPUT RECORDER FPS (AVG)",
-        _ => ""
-    };
+    private static string LabelFor(int type) => MetricTypes.Label(type);
 
     // Called by the parent on each PlaylistInfoMessageDto.
     public void Push(PlaylistInfoMessageDto dto)
     {
         if (dto == null) return;
 
-        string? raw;
-        string suffix = "";
-        switch (ChartType)
-        {
-            case 0: raw = dto.AverageFps; CurrentText = dto.FPS ?? raw ?? "—"; break;
-            case 1: raw = dto.Jitter; suffix = " ms"; CurrentText = (dto.Jitter ?? "0") + suffix; break;
-            case 2: raw = dto.InputAvg; suffix = " ms"; CurrentText = (dto.InputAvg ?? "0") + suffix; break;
-            case 3: raw = dto.LiveFPS; CurrentText = dto.LiveFPS ?? "—"; break;
-            case 4: raw = dto.UrlFPS; CurrentText = dto.UrlFPS ?? "—"; break;
-            case 5: raw = dto.InputRecFPS; CurrentText = dto.InputRecFPS ?? "—"; break;
-            case 6: raw = dto.OutputRecFPS; CurrentText = dto.OutputRecFPS ?? "—"; break;
-            default: raw = null; break;
-        }
+        CurrentText = MetricTypes.DisplayValue(ChartType, dto);
 
-        if (double.TryParse(raw, NumberStyles.Any, CultureInfo.InvariantCulture, out var val))
+        if (MetricTypes.TryParse(MetricTypes.RawValue(ChartType, dto), out var val))
         {
             _samples.Add(new Sample { Index = _index++, Value = val });
             if (_samples.Count > 60) _samples.RemoveAt(0);

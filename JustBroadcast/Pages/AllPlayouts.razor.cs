@@ -8,10 +8,19 @@ namespace JustBroadcast.Pages
     public partial class AllPlayouts : IDisposable
     {
         [Inject] private IMockPlayoutFeed MockFeed { get; set; } = default!;
+        [Inject] private IPlayoutApiService PlayoutApi { get; set; } = default!;
+        [Inject] private IPlayoutSettingsService Settings { get; set; } = default!;
 
         private bool isLoading = true;
         private List<PlayoutListDto> playouts = new();
         private readonly Dictionary<string, PlaylistInfoMessageDto> _live = new();
+
+        // Per-playout data that SignalR doesn't carry. Output *names* and types come
+        // from REST once on load; live FPS/health then arrive inside PlayoutStatus.
+        private readonly Dictionary<string, List<PlayoutoutputShortDto>> _outputs = new();
+        private readonly Dictionary<string, List<ErrorListDto>> _errors = new();
+        private readonly Dictionary<string, List<EventlogDto>> _eventLogs = new();
+        private readonly Dictionary<string, int[]> _metricSlots = new();
 
         // SignalR is the only source of live online state; Playouts/short returns
         // stale DB columns, not current status.
@@ -41,7 +50,41 @@ namespace JustBroadcast.Pages
                 MockFeed.Start();
             }
 
+            await LoadPerPlayoutData();
+
             isLoading = false;
+        }
+
+        // One-time load of everything the tiles need that SignalR doesn't provide.
+        // Only fetched when the current density actually renders it.
+        private async Task LoadPerPlayoutData()
+        {
+            var density = GridColumns;
+
+            foreach (var p in playouts)
+            {
+                var slots = new int[5];
+                for (int slot = 0; slot < slots.Length; slot++)
+                    slots[slot] = await Settings.GetMetricTypeAsync(p.Id, slot);
+                _metricSlots[p.Id] = slots;
+
+                try
+                {
+                    // Output names/types are needed at every density.
+                    _outputs[p.Id] = await PlayoutApi.GetOutputsAsync(p.Id);
+
+                    // Errors and event logs only appear in the 2-up tiles.
+                    if (density == 2)
+                    {
+                        _errors[p.Id] = await PlayoutApi.GetErrorsLastWeekAsync(p.Id);
+                        _eventLogs[p.Id] = await PlayoutApi.GetEventLogsAsync(p.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AllPlayouts] load for '{p.Id}' failed: {ex.Message}");
+                }
+            }
         }
 
         private void OnMockTick(string id, PlaylistInfoMessageDto dto)
@@ -74,6 +117,30 @@ namespace JustBroadcast.Pages
 
         private PlaylistInfoMessageDto? LiveFor(string id) =>
             _live.TryGetValue(id, out var d) ? d : null;
+
+        private List<PlayoutoutputShortDto>? OutputsFor(string id) =>
+            _outputs.TryGetValue(id, out var o) ? o : null;
+
+        private List<ErrorListDto>? ErrorsFor(string id) =>
+            _errors.TryGetValue(id, out var e) ? e : null;
+
+        private List<EventlogDto>? EventLogsFor(string id) =>
+            _eventLogs.TryGetValue(id, out var l) ? l : null;
+
+        private int[]? MetricSlotsFor(string id) =>
+            _metricSlots.TryGetValue(id, out var m) ? m : null;
+
+        private async Task OnMetricTypeChanged(string playoutId, int slot, int metricType)
+        {
+            if (_metricSlots.TryGetValue(playoutId, out var slots) && slot < slots.Length)
+                slots[slot] = metricType;
+
+            await Settings.SetMetricTypeAsync(playoutId, slot, metricType);
+            StateHasChanged();
+        }
+
+        private async Task StartStopOutput(StartStopOuputDto dto) =>
+            await SignalRService.SendStartStopOutputAsync(dto);
 
         private void OnCommandReceived(CommandDto command)
         {

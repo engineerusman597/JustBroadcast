@@ -11,7 +11,12 @@
 <div class="all-playouts">
     <div class="ap-topbar">
         <h1>All Playouts</h1>
-        <span class="ap-count">@playouts.Count playouts · @ViewLabel</span>
+        @* Suppressed while loading: the count is 0 until data arrives, which would
+           otherwise read "0 playouts · 2-up view". *@
+        @if (!isLoading)
+        {
+            <span class="ap-count">@playouts.Count playouts · @ViewLabel</span>
+        }
     </div>
 
     @if (isLoading)
@@ -23,10 +28,18 @@
         <div class="ap-grid ap-grid-@GridColumns">
             @foreach (var p in playouts)
             {
-                <PlayoutTile PlayoutId="@p.Id"
+                var id = p.Id;
+                <PlayoutTile PlayoutId="@id"
                              Name="@(p.Name ?? "Playout")"
-                             IsOnline="@IsOnline(p.Id)"
-                             Data="@LiveFor(p.Id)"
+                             IsOnline="@IsOnline(id)"
+                             Density="@GridColumns"
+                             Data="@LiveFor(id)"
+                             Outputs="@OutputsFor(id)"
+                             Errors="@ErrorsFor(id)"
+                             EventLogs="@EventLogsFor(id)"
+                             MetricSlots="@MetricSlotsFor(id)"
+                             OnMetricTypeChanged="@((t) => OnMetricTypeChanged(id, t.Slot, t.Type))"
+                             OnStartStopOutput="StartStopOutput"
                              OnSelect="SelectPlayout" />
             }
         </div>

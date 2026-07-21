@@ -1,35 +1,105 @@
-@using JustBroadcast.Services
-@* Compact playout tile used in the 2/4/6/8-up All Playouts grid. *@
+@* Playout tile for the All Playouts grid. One component, four densities: the
+   larger the grid, the less detail each tile shows (see spec pp. 23-33).
 
-<div class="playout-tile @(IsOnline ? "" : "tile-offline")" @onclick="HandleClick">
-    <div class="tile-header">
-        <span class="tile-name">@Name</span>
-        <span class="tile-state @(IsOnline ? "state-online" : "state-offline")">
-            @(IsOnline ? "ONLINE" : "OFFLINE")
+     Density 2 : preview+VU, name/times/progress, outputs table, 4 countdowns,
+                 5 metrics, errors, error frequency, graphics, event logs
+     Density 4 : as above, minus errors / error frequency / graphics / event logs
+     Density 6 : outputs as boxes, 3 countdowns, 3 metrics
+     Density 8 : no countdowns, max 4 output boxes, 2 metrics
+
+   Clicking anywhere that isn't an interactive control opens the single view. *@
+
+<div class="ptile ptile-d@(Density) @(IsOnline ? "" : "tile-offline")" @onclick="HandleClick">
+
+    <div class="ptile-head">
+        <span class="ptile-name" title="@Name">@Name</span>
+        <span class="ptile-state @(IsOnline ? "state-online" : "state-offline")">
+            @(IsOnline ? (Playing ? "ON AIR" : "ONLINE") : "OFFLINE")
         </span>
     </div>
 
-    <div class="tile-preview">
-        @if (IsOnline && !string.IsNullOrEmpty(FrameSrc))
-        {
-            <img class="tile-frame" src="@FrameSrc" alt="preview" />
-        }
-        else
-        {
-            <div class="tile-frame tile-frame-empty">@(IsOnline ? "NO SIGNAL" : "OFFLINE")</div>
-        }
-        <div class="tile-vu">
+    <div class="ptile-preview-row">
+        <div class="ptile-preview">
+            @if (IsOnline && !string.IsNullOrEmpty(FrameSrc))
+            {
+                <img class="ptile-frame" src="@FrameSrc" alt="preview" />
+            }
+            else
+            {
+                <div class="ptile-frame ptile-frame-empty">@(IsOnline ? "NO SIGNAL" : "OFFLINE")</div>
+            }
+        </div>
+        <div class="ptile-vu">
             <VuMeter Audio="@Data?.Audio" />
         </div>
     </div>
 
-    <div class="tile-footer">
-        <span class="tile-status @(Playing ? "np-onair" : "np-stopped")">
-            @(Playing ? "ON AIR" : "STOPPED")
-        </span>
-        <span class="tile-item">@ItemName</span>
-        <span class="tile-fps">@(Data?.AverageFps ?? "0.00") fps</span>
+    <div class="ptile-item" title="@ItemName">@ItemName</div>
+
+    <div class="ptile-progress">
+        <div class="ptile-progress-fill" style="width:@ProgressCss"></div>
     </div>
+
+    <div class="ptile-times">
+        <span class="ptile-time">@OnAir</span>
+        <span class="ptile-time-sep">/</span>
+        <span class="ptile-time">@Remaining</span>
+    </div>
+
+    @* --- Outputs: table for 2/4-up, boxes for 6/8-up --- *@
+    <div class="ptile-outputs">
+        @if (Density <= 4)
+        {
+            <OutputsGrid Outputs="Outputs"
+                         Messages="@Data?.Outputs"
+                         PlayoutId="@PlayoutId"
+                         OnStartStopOutput="OnStartStopOutput" />
+        }
+        else
+        {
+            <OutputsBoxes Outputs="Outputs"
+                          Messages="@Data?.Outputs"
+                          PlayoutId="@PlayoutId"
+                          Limit="@(Density == 8 ? 4 : 0)"
+                          OnStartStopOutput="OnStartStopOutput" />
+        }
+    </div>
+
+    @* --- Countdowns: 4 at 2/4-up, 3 at 6-up, none at 8-up ---
+         Placeholder data until Ivan adds the schedule-change message. *@
+    @if (CountdownCount > 0)
+    {
+        <div class="ptile-countdowns">
+            <ScheduleCountdownPanel Title="PUSHED LISTS" Item="PushedList" />
+            <ScheduleCountdownPanel Title="DAILY LISTS" Item="DailyList" />
+            <ScheduleCountdownPanel Title="SCHEDULE ITEM" Item="NextItem" IsScheduleItem="true" ShowCount="false" />
+            @if (CountdownCount > 3)
+            {
+                <ScheduleCountdownPanel Title="NEXT LIST" Item="NextList" ShowCount="false" />
+            }
+        </div>
+    }
+
+    @* --- Numeric metrics: 5 / 5 / 3 / 2 by density --- *@
+    <div class="ptile-metrics">
+        @for (int slot = 0; slot < MetricCount; slot++)
+        {
+            var s = slot;
+            <MetricValue MetricType="@MetricTypeFor(s)"
+                         Data="@Data"
+                         Compact="@(Density >= 6)"
+                         MetricTypeChanged="@((t) => OnMetricChanged(s, t))" />
+        }
+    </div>
+
+    @* --- Bottom panels: 2-up only --- *@
+    @if (Density == 2)
+    {
+        <div class="ptile-panels">
+            <SinglePlayoutErrors Errors="Errors" />
+            <EventLogPanel Logs="EventLogs" />
+        </div>
+    }
 </div>
 
 @code {
@@ -37,10 +107,67 @@
     [Parameter] public string Name { get; set; } = "";
     [Parameter] public bool IsOnline { get; set; }
     [Parameter] public PlaylistInfoMessageDto? Data { get; set; }
+
+    // 2, 4, 6 or 8 — how many tiles share the screen.
+    [Parameter] public int Density { get; set; } = 4;
+
+    [Parameter] public List<PlayoutoutputShortDto>? Outputs { get; set; }
+    [Parameter] public List<ErrorListDto>? Errors { get; set; }
+    [Parameter] public List<EventlogDto>? EventLogs { get; set; }
+
+    [Parameter] public NextScheduleItemDto? PushedList { get; set; }
+    [Parameter] public NextScheduleItemDto? DailyList { get; set; }
+    [Parameter] public NextScheduleItemDto? NextItem { get; set; }
+    [Parameter] public NextScheduleItemDto? NextList { get; set; }
+
+    // slot -> metric type, supplied and persisted by the parent page.
+    // Named MetricSlots so it doesn't shadow the static MetricTypes helper.
+    [Parameter] public int[]? MetricSlots { get; set; }
+    [Parameter] public EventCallback<(int Slot, int Type)> OnMetricTypeChanged { get; set; }
+
+    [Parameter] public EventCallback<StartStopOuputDto> OnStartStopOutput { get; set; }
     [Parameter] public EventCallback<string> OnSelect { get; set; }
 
     private bool Playing => Data?.IsPlaying ?? false;
-    private string ItemName => string.IsNullOrEmpty(Data?.CurrentlyPlayingItemName) ? "—" : Data!.CurrentlyPlayingItemName;
+
+    private string ItemName =>
+        string.IsNullOrEmpty(Data?.CurrentlyPlayingItemName) ? "—" : Data!.CurrentlyPlayingItemName;
+
+    private string OnAir => PlayoutHelper.Dbl2PosStrNoMiliseconds(Data?.FileTime ?? 0);
+    private string Remaining => PlayoutHelper.Dbl2PosStrNoMiliseconds(Data?.Remaining ?? 0);
+
+    private int MetricCount => Density switch { 2 => 5, 4 => 5, 6 => 3, _ => 2 };
+    private int CountdownCount => Density switch { 2 => 4, 4 => 4, 6 => 3, _ => 0 };
+
+    private int MetricTypeFor(int slot) =>
+        MetricSlots != null && slot < MetricSlots.Length ? MetricSlots[slot] : slot;
+
+    private Task OnMetricChanged(int slot, int type) =>
+        OnMetricTypeChanged.HasDelegate
+            ? OnMetricTypeChanged.InvokeAsync((slot, type))
+            : Task.CompletedTask;
+
+    // Same derivation as the single view: FileTime / (FileTime + Remaining) is
+    // reliable, whereas the DTO's Progress field has an unconfirmed scale.
+    private float Progress
+    {
+        get
+        {
+            var elapsed = Data?.FileTime ?? 0d;
+            var remaining = Data?.Remaining ?? 0d;
+            var total = elapsed + remaining;
+            if (total > 0d)
+                return (float)Math.Clamp(elapsed / total * 100d, 0d, 100d);
+
+            var raw = Data?.Progress ?? 0f;
+            if (raw <= 1f) raw *= 100f;
+            else if (raw <= 10f) raw *= 10f;
+            return Math.Clamp(raw, 0f, 100f);
+        }
+    }
+
+    private string ProgressCss =>
+        Progress.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "%";
 
     private string? FrameSrc
     {

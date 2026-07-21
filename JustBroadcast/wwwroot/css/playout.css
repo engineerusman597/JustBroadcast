@@ -44,6 +44,42 @@
 .state-online { color: var(--pl-green); font-weight: 700; }
 .state-offline { color: var(--pl-muted); font-weight: 700; }
 
+/* ---------- loading panel ----------
+   Dashboard.razor.css styles .loading-container too, but scoped CSS doesn't
+   cascade to other components, so All Playouts needs its own copy here. */
+.all-playouts .loading-container,
+.single-playout .loading-container {
+    position: relative;          /* anchor the panel's absolute positioning here */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    width: 100%;
+}
+/* The panel positions itself against the nearest positioned ancestor; without
+   this it detaches from the text and floats to the corner. */
+.all-playouts .loading-container .dxbl-loading-panel,
+.single-playout .loading-container .dxbl-loading-panel {
+    position: static !important;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .75rem;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+.all-playouts .loading-container .dxbl-loading-panel *:not(svg):not(circle):not(path):not(rect),
+.single-playout .loading-container .dxbl-loading-panel *:not(svg):not(circle):not(path):not(rect) {
+    color: var(--pl-text) !important;
+}
+.all-playouts .loading-container svg circle,
+.single-playout .loading-container svg circle {
+    stroke: var(--pl-blue) !important;
+}
+
 /* ---------- All Playouts grid ---------- */
 .ap-grid { display: grid; gap: 1rem; }
 .ap-grid-2 { grid-template-columns: repeat(2, 1fr); }
@@ -51,24 +87,138 @@
 .ap-grid-6 { grid-template-columns: repeat(3, 1fr); }
 .ap-grid-8 { grid-template-columns: repeat(4, 1fr); }
 
-.playout-tile {
+/* ---------- N-up playout tile ----------
+   One component, four densities (.ptile-d2/4/6/8). Everything scales down as the
+   grid grows; the density classes at the end of this block do the trimming. */
+.ptile {
+    position: relative; z-index: 0;
     background: var(--pl-panel); border: 1px solid var(--pl-border); border-radius: 12px;
-    overflow: hidden; cursor: pointer; transition: border-color .15s, transform .1s;
-    display: flex; flex-direction: column;
+    overflow: visible; cursor: pointer; transition: border-color .15s, transform .1s;
+    display: flex; flex-direction: column; gap: .5rem; padding: .6rem .7rem;
+    color: var(--pl-text); min-width: 0;
 }
-.playout-tile:hover { border-color: var(--pl-blue); transform: translateY(-2px); }
-.playout-tile.tile-offline { opacity: .5; cursor: default; }
-.playout-tile.tile-offline:hover { border-color: var(--pl-border); transform: none; }
-.tile-header { display: flex; justify-content: space-between; align-items: center; padding: .6rem .75rem; }
-.tile-name { font-weight: 600; font-size: .9rem; }
-.tile-state { font-size: .7rem; font-weight: 700; }
-.tile-preview { position: relative; aspect-ratio: 16/9; background: #000; }
-.tile-frame { width: 100%; height: 100%; object-fit: cover; display: block; }
-.tile-frame-empty { display: flex; align-items: center; justify-content: center; color: var(--pl-muted); font-size: .8rem; height: 100%; }
-.tile-vu { position: absolute; top: 6px; right: 6px; bottom: 6px; width: 26px; }
-.tile-footer { display: flex; align-items: center; gap: .5rem; padding: .5rem .75rem; font-size: .75rem; }
-.tile-item { flex: 1; color: var(--pl-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tile-fps { color: var(--pl-muted); }
+/* A tile containing an open popover/menu must sit above its siblings, otherwise
+   later tiles in DOM order paint over the dropdown and swallow its clicks. */
+.ptile:has(.mv-open), .ptile:has(.fps-popover) { z-index: 30; }
+.ptile:hover { border-color: var(--pl-blue); }
+.ptile.tile-offline { cursor: default; }
+.ptile.tile-offline:hover { border-color: var(--pl-border); }
+/* Fade the tile's own content, never the whole tile: opacity on the parent
+   makes the entire subtree translucent, so floating menus and popovers would
+   let the tiles underneath read through them. */
+.ptile.tile-offline > *:not(.ptile-metrics):not(.ptile-outputs) { opacity: .55; }
+.ptile.tile-offline .ptile-metrics > .mv:not(.mv-open),
+.ptile.tile-offline .ptile-outputs .obx-box:not(.selected) { opacity: .55; }
+
+.ptile-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+.ptile-name {
+    font-weight: 600; font-size: .9rem; color: var(--pl-text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+}
+.ptile-state { font-size: .68rem; font-weight: 700; letter-spacing: .5px; flex-shrink: 0; }
+
+/* preview + VU side by side, so the VU never covers the picture */
+.ptile-preview-row { display: flex; gap: .4rem; align-items: stretch; }
+.ptile-preview { flex: 1; aspect-ratio: 16/9; background: #000; border-radius: 6px; overflow: hidden; min-width: 0; }
+.ptile-frame { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ptile-frame-empty {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--pl-muted); font-size: .75rem; height: 100%;
+}
+.ptile-vu { width: 22px; flex-shrink: 0; }
+
+.ptile-item {
+    font-size: .78rem; color: var(--pl-text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.ptile-progress { height: 5px; background: #1c2334; border-radius: 3px; overflow: hidden; }
+.ptile-progress-fill {
+    height: 100%; background: var(--pl-blue); border-radius: 3px;
+    transition: width .3s; min-width: 2px;
+}
+
+.ptile-times {
+    display: flex; gap: .35rem; font-size: .75rem; color: var(--pl-text);
+    font-variant-numeric: tabular-nums;
+}
+.ptile-time-sep { color: var(--pl-muted); }
+
+.ptile-countdowns { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+.ptile-metrics { display: grid; gap: .4rem; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+.ptile-panels { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+
+/* --- density trimming --- */
+.ptile-d6, .ptile-d8 { gap: .35rem; padding: .5rem; }
+.ptile-d6 .ptile-name, .ptile-d8 .ptile-name { font-size: .8rem; }
+.ptile-d6 .ptile-item, .ptile-d8 .ptile-item { font-size: .72rem; }
+.ptile-d6 .ptile-times, .ptile-d8 .ptile-times { font-size: .68rem; }
+.ptile-d6 .ptile-vu, .ptile-d8 .ptile-vu { width: 16px; }
+.ptile-d6 .ptile-countdowns { grid-template-columns: repeat(3, 1fr); }
+.ptile-d8 .ptile-state { font-size: .6rem; }
+
+/* ---------- outputs as boxes (6/8-up) ---------- */
+.obx { display: flex; flex-direction: column; gap: .25rem; }
+.obx-empty { color: var(--pl-muted); font-size: .7rem; padding: .2rem 0; }
+.obx-box {
+    position: relative; display: flex; align-items: center; gap: .35rem;
+    background: #0b1120; border: 1px solid var(--pl-border); border-radius: 6px;
+    padding: .25rem .4rem; font-size: .7rem; cursor: pointer;
+}
+.obx-box:hover { border-color: var(--pl-blue); }
+.obx-box.selected { border-color: var(--pl-blue); }
+.obx-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.obx-name {
+    flex: 1; color: var(--pl-text); min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.obx-fps { font-weight: 700; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+/* ---------- numeric metric with click-to-select ---------- */
+.mv {
+    position: relative; background: #0b1120; border: 1px solid var(--pl-border);
+    border-radius: 8px; padding: .35rem .4rem; text-align: center; min-width: 0;
+}
+.mv-open { z-index: 41; }
+.mv-value {
+    font-size: 1rem; font-weight: 700; font-variant-numeric: tabular-nums;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mv-label {
+    display: block; width: 100%; margin-top: .1rem;
+    background: none; border: none; padding: 0; cursor: pointer;
+    font-size: .58rem; font-weight: 600; letter-spacing: .4px;
+    color: var(--pl-muted); text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mv-label:hover { color: var(--pl-text); text-decoration: underline; }
+.mv-compact .mv-value { font-size: .85rem; }
+.mv-compact .mv-label { font-size: .53rem; }
+
+/* Right-anchored for metrics near the right edge of a tile, so the menu
+   doesn't spill outside the grid. */
+.mv:last-child .mv-menu { left: auto; right: 0; }
+.mv-menu {
+    position: absolute; top: 100%; left: 0; z-index: 40; margin-top: 2px;
+    /* Opaque, not var(--pl-panel): this floats over other tiles, so any
+       translucency lets the content underneath read through it. */
+    background: #131c30; border: 1px solid var(--pl-border); border-radius: 8px;
+    min-width: 160px; padding: .25rem; text-align: left;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .85);
+}
+.mv-menu-item {
+    padding: .3rem .5rem; font-size: .7rem; color: var(--pl-text);
+    border-radius: 5px; cursor: pointer; white-space: nowrap;
+}
+.mv-menu-item:hover { background: #16203a; }
+.mv-menu-item.active { color: var(--pl-blue); font-weight: 700; }
+
+/* The FPS popover is 320px by default, which is wider than a tile in the denser
+   grids. Cap it to the tile and let it spill left rather than off-screen. */
+.ptile .fps-popover { width: min(320px, 92vw); max-width: none; }
+.ptile-d6 .fps-popover, .ptile-d8 .fps-popover { width: 260px; }
+.ap-grid-8 .ptile:nth-child(4n) .fps-popover,
+.ap-grid-6 .ptile:nth-child(3n) .fps-popover { right: 0; left: auto; }
 
 /* ---------- Single playout layout ----------
    3 independent columns; each .sp-col is a self-sizing flex stack so a tall

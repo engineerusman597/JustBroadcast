@@ -1,0 +1,51 @@
+@* Numeric counterpart to MetricGraph, used in the N-up tiles. Same seven metrics
+   and the same click-to-select behaviour, but no chart: clicking the label opens
+   the picker. Selection is persisted per playout by the parent. *@
+
+<div class="mv @(Compact ? "mv-compact" : "") @(_menuOpen ? "mv-open" : "")">
+    <div class="mv-value" style="color:@Color">@ValueText</div>
+    <button class="mv-label" @onclick="Toggle" @onclick:stopPropagation="true" title="Click to change metric">
+        @LabelText
+    </button>
+
+    @if (_menuOpen)
+    {
+        <div class="mv-menu" @onclick:stopPropagation="true" @onmouseleave="Close">
+            @for (int t = 0; t < MetricTypes.Count; t++)
+            {
+                var type = t;
+                <div class="mv-menu-item @(MetricType == type ? "active" : "")"
+                     @onclick="() => SelectType(type)">
+                    @MetricTypes.Label(type)
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int MetricType { get; set; }
+    [Parameter] public EventCallback<int> MetricTypeChanged { get; set; }
+    [Parameter] public PlaylistInfoMessageDto? Data { get; set; }
+
+    // Denser presentation for the 6- and 8-up grids.
+    [Parameter] public bool Compact { get; set; }
+
+    private bool _menuOpen;
+
+    private string Color => MetricTypes.Color(MetricType);
+    private string LabelText => MetricTypes.ShortLabel(MetricType);
+    private string ValueText => Data == null ? "—" : MetricTypes.DisplayValue(MetricType, Data);
+
+    private void Toggle() => _menuOpen = !_menuOpen;
+    private void Close() => _menuOpen = false;
+
+    private async Task SelectType(int type)
+    {
+        _menuOpen = false;
+        if (type == MetricType) return;
+        MetricType = type;
+        if (MetricTypeChanged.HasDelegate)
+            await MetricTypeChanged.InvokeAsync(type);
+    }
+}

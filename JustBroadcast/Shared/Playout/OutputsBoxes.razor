@@ -1,0 +1,71 @@
+@* Compact outputs for the 6- and 8-up tiles: name + FPS boxes instead of a table.
+   Clicking the FPS opens the same OutputFpsPopover used everywhere else. *@
+
+<div class="obx @(Limit > 0 ? "obx-capped" : "")">
+    @if (Shown.Count == 0)
+    {
+        <div class="obx-empty">No outputs</div>
+    }
+    else
+    {
+        @foreach (var o in Shown)
+        {
+            var msg = MessageFor(o.Id);
+            var health = PlayoutHelper.HealthDisplay(msg?.HealthStatus ?? HealthStatus.Unknown);
+            <div class="obx-box @(SelectedId == o.Id ? "selected" : "")"
+                 @onclick="() => Toggle(o.Id)" @onclick:stopPropagation="true">
+                <span class="obx-dot" style="background:@(msg?.IsStarted == true ? health.Color : "#2d79f7")"></span>
+                <span class="obx-name" title="@(o.OutputName ?? "Output")">@(o.OutputName ?? "Output")</span>
+                <span class="obx-fps" style="color:@health.Color">@PlayoutHelper.FormatFps(msg?.FPS)</span>
+
+                @if (SelectedId == o.Id)
+                {
+                    <OutputFpsPopover Output="o"
+                                      Message="msg"
+                                      OnClose="() => SelectedId = null"
+                                      OnStartStop="(started) => StartStop(o, started)" />
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public List<PlayoutoutputShortDto>? Outputs { get; set; }
+    [Parameter] public List<OutputInfoMessageDto>? Messages { get; set; }
+    [Parameter] public EventCallback<StartStopOuputDto> OnStartStopOutput { get; set; }
+    [Parameter] public string? PlayoutId { get; set; }
+
+    // Max outputs to render; 0 = no cap. The 8-up view caps at 4 per the spec.
+    [Parameter] public int Limit { get; set; }
+
+    private string? SelectedId;
+
+    private List<PlayoutoutputShortDto> Shown
+    {
+        get
+        {
+            if (Outputs == null) return new();
+            return Limit > 0 ? Outputs.Take(Limit).ToList() : Outputs;
+        }
+    }
+
+    private OutputInfoMessageDto? MessageFor(string id) =>
+        Messages?.FirstOrDefault(m => m.OutputId == id);
+
+    private void Toggle(string id) => SelectedId = SelectedId == id ? null : id;
+
+    private async Task StartStop(PlayoutoutputShortDto output, bool desiredStarted)
+    {
+        if (OnStartStopOutput.HasDelegate)
+        {
+            await OnStartStopOutput.InvokeAsync(new StartStopOuputDto
+            {
+                PlayoutId = PlayoutId,
+                OutputId = output.Id,
+                IsStarted = desiredStarted
+            });
+        }
+        SelectedId = null;
+    }
+}
